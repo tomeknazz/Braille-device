@@ -51,13 +51,11 @@ Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(MODULE_2_I2C_ADDR);
 
 // --- 1. Hardware Abstraction Layer Function ---
 // Sets any of the 30 servos to the desired position, automatically selecting the module.
-void set_servo_from_global_index(uint8_t servo_index, bool is_extended) {
-  uint16_t pwm_value = is_extended ? PIN_EXTENDED : PIN_RETRACTED;
-  
+void set_servo_from_global_index(uint8_t servo_index, uint16_t pwm_value) {
   if (servo_index < SERVOS_PER_MODULE) {
     pwm1.setPWM(servo_index, 0, pwm_value);
   } else {
-    pwm2.setPWM(servo_index - SERVOS_PER_MODULE, 0, pwm_value); 
+    pwm2.setPWM(servo_index - SERVOS_PER_MODULE, 0, pwm_value);
   }
 }
 
@@ -66,10 +64,10 @@ void set_servo_from_global_index(uint8_t servo_index, bool is_extended) {
 // module_position - which braille cell to display the letter on (from 0 to MAX_CELLS - 1)
 void display_letter(char letter, uint8_t module_position) {
   // Protection against exceeding the maximum cell limit
-  if (module_position >= MAX_CELLS) return; 
+  if (module_position >= MAX_CELLS) return;
 
   // Convert lowercase letter to uppercase to avoid errors
-  letter = toupper(letter); 
+  letter = toupper(letter);
 
   // Calculate the starting servo index for this module
   uint8_t base_servo_index = module_position * PINS_PER_CELL;
@@ -77,8 +75,8 @@ void display_letter(char letter, uint8_t module_position) {
   // Clear the module for a space character
   if (letter == ' ') {
     for (uint8_t i = 0; i < PINS_PER_CELL; i++) {
-      set_servo_from_global_index(base_servo_index + i, false);
-      delay(CASCADE_DELAY_MS); 
+      set_servo_from_global_index(base_servo_index + i, PIN_RETRACTED);
+      delay(CASCADE_DELAY_MS);
     }
     return;
   }
@@ -86,13 +84,14 @@ void display_letter(char letter, uint8_t module_position) {
   // Check if the letter is in the A-Z range
   if (letter >= 'A' && letter <= 'Z') {
     uint8_t alphabet_index = letter - 'A';
-    
+
     // Iterate through the points of the Braille cell
     for (uint8_t i = 0; i < PINS_PER_CELL; i++) {
       bool state = braille_alphabet[alphabet_index][i];
-      set_servo_from_global_index(base_servo_index + i, state);
-      
-      delay(CASCADE_DELAY_MS); 
+      uint16_t pwm_value = state ? PIN_EXTENDED : PIN_RETRACTED;
+      set_servo_from_global_index(base_servo_index + i, pwm_value);
+
+      delay(CASCADE_DELAY_MS);
     }
   }
 }
@@ -106,38 +105,27 @@ void setup() {
   pwm2.begin();
   pwm2.setOscillatorFrequency(27000000);
   pwm2.setPWMFreq(50); // Standard 50Hz for SG90
-  
+
   delay(1000);
 }
 
 void loop() {
-  // Przejście przez wszystkie litery od A do Z
-  /*
-  for (char test_letter = 'A'; test_letter <= 'Z'; test_letter++) {
-    Serial.print("Testowanie litery: ");
-    Serial.println(test_letter);
-    
-    display_letter(test_letter, 2);
-    //delay(500);
-    //display_letter(test_letter, 1);
-    //delay(500);
-    //display_letter(test_letter, 2);
-    //delay(500);
-    //display_letter(test_letter, 3);
-    //delay(500);
-    //display_letter(test_letter, 4);
-    //delay(500);
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    int commaIndex = command.indexOf(',');
+    if (commaIndex != -1) {
+      String indexStr = command.substring(0, commaIndex);
+      String pwmStr = command.substring(commaIndex + 1);
+      int servoIndex = indexStr.toInt();
+      int pwmValue = pwmStr.toInt();
+
+      Serial.print("Setting servo ");
+      Serial.print(servoIndex);
+      Serial.print(" to PWM ");
+      Serial.println(pwmValue);
+
+      set_servo_from_global_index(servoIndex, pwmValue);
     }
-    */
-    
-    display_letter(' ',0);
-    display_letter(' ',1);
-    display_letter(' ',2);
-    display_letter(' ',3);
-    display_letter(' ',4);
-
-
-    delay(500); // Sekunda przerwy na obserwację mechanizmu
-  
-  
+  }
 }

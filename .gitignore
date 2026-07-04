@@ -8,3 +8,4 @@ test
 *.ini
 include
 .vscode
+.cache

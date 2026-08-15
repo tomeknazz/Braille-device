@@ -7,7 +7,7 @@
 #define DEFAULT_EXTENDED 520
 
 // Absolute PWM limits - protects the servos from being driven past their stops.
-#define PWM_MIN 110
+#define PWM_MIN 90
 #define PWM_MAX 520
 
 #define CASCADE_DELAY_MS 20

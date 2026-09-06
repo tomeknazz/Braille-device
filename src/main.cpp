@@ -36,7 +36,7 @@ static_assert(TOTAL_SERVOS <= 2 * SERVOS_PER_MODULE,
 //      sits exactly where you want it.
 //   3. Write the two values you found into the row for that servo here.
 //   4. Send "<index>,min" / "<index>,max" to verify the stored values, or
-//      "dump" to print the whole table.
+//      "dump" to print the whole table. "min" / "max" alone sweep every pin.
 struct ServoRange {
   uint16_t retracted;  // dot down
   uint16_t extended;   // dot up
@@ -196,6 +196,34 @@ void dump_calibration() {
   }
 }
 
+// Drives every pin in the device to one of its calibrated end positions.
+// The servos are stepped one after another (cascade effect), which also keeps
+// the peak current draw down compared to moving all 30 of them at once.
+void set_all_servos(bool is_extended) {
+  for (uint8_t i = 0; i < TOTAL_SERVOS; i++) {
+    set_servo_state(i, is_extended);
+    delay(CASCADE_DELAY_MS);
+  }
+}
+
+// Shows the same letter on every braille cell of the device.
+void display_letter_on_all_cells(char letter) {
+  for (uint8_t cell = 0; cell < MAX_CELLS; cell++) {
+    display_letter(letter, cell);
+  }
+}
+
+void print_help() {
+  Serial.println("Servo tester ready.");
+  Serial.println("  <index>,<pwm>  - raw PWM value");
+  Serial.println("  <index>,min    - calibrated retracted position");
+  Serial.println("  <index>,max    - calibrated extended position");
+  Serial.println("  min | max      - all pins down / up, one by one");
+  Serial.println("  <letter>       - show an A-Z letter on every cell");
+  Serial.println("  clear          - retract every cell (braille space)");
+  Serial.println("  dump           - print the calibration table");
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -208,51 +236,97 @@ void setup() {
 
   delay(1000);
 
-  Serial.println("Servo tester ready.");
-  Serial.println("  <index>,<pwm>  - raw PWM value");
-  Serial.println("  <index>,min    - calibrated retracted position");
-  Serial.println("  <index>,max    - calibrated extended position");
-  Serial.println("  dump           - print the calibration table");
+  print_help();
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    String command = Serial.readStringUntil('\n');
-    command.trim();
+  if (Serial.available() <= 0) return;
 
-    if (command.equalsIgnoreCase("dump")) {
-      dump_calibration();
+  String command = Serial.readStringUntil('\n');
+  command.trim();
+  if (command.length() == 0) return;
+
+  // Split "<target>,<value>"; commands without a comma leave value empty.
+  int commaIndex = command.indexOf(',');
+  String target = (commaIndex == -1) ? command : command.substring(0, commaIndex);
+  String value = (commaIndex == -1) ? String("") : command.substring(commaIndex + 1);
+  target.trim();
+  value.trim();
+
+  if (target.equalsIgnoreCase("dump")) {
+    dump_calibration();
+    return;
+  }
+
+  if (target.equalsIgnoreCase("help") || target == "?") {
+    print_help();
+    return;
+  }
+
+  // Whole device: "min" / "max" (also accepted as "all,min" / "all,max").
+  bool wholeDevice = target.equalsIgnoreCase("all");
+  String endstop = wholeDevice ? value : target;
+  if (endstop.equalsIgnoreCase("min") || endstop.equalsIgnoreCase("max")) {
+    if (wholeDevice || commaIndex == -1) {
+      bool is_extended = endstop.equalsIgnoreCase("max");
+      Serial.print("Setting all servos to ");
+      Serial.println(is_extended ? "max" : "min");
+      set_all_servos(is_extended);
       return;
     }
+  }
 
-    int commaIndex = command.indexOf(',');
-    if (commaIndex != -1) {
-      String indexStr = command.substring(0, commaIndex);
-      String valueStr = command.substring(commaIndex + 1);
-      valueStr.trim();
+  if (wholeDevice) {
+    Serial.print("Expected \"all,min\" or \"all,max\", got: ");
+    Serial.println(command);
+    return;
+  }
 
-      int servoIndex = indexStr.toInt();
-      if (servoIndex < 0 || servoIndex >= TOTAL_SERVOS) {
-        Serial.print("Servo index out of range: ");
-        Serial.println(servoIndex);
-        return;
-      }
-
-      uint16_t pwmValue;
-      if (valueStr.equalsIgnoreCase("min")) {
-        pwmValue = servo_range[servoIndex].retracted;
-      } else if (valueStr.equalsIgnoreCase("max")) {
-        pwmValue = servo_range[servoIndex].extended;
-      } else {
-        pwmValue = valueStr.toInt();
-      }
-
-      Serial.print("Setting servo ");
-      Serial.print(servoIndex);
-      Serial.print(" to PWM ");
-      Serial.println(pwmValue);
-
-      set_servo_from_global_index(servoIndex, pwmValue);
+  // A single letter shows that character on every cell at once.
+  if (commaIndex == -1 && target.length() == 1) {
+    char letter = toupper(target.charAt(0));
+    if (letter >= 'A' && letter <= 'Z') {
+      Serial.print("Displaying '");
+      Serial.print(letter);
+      Serial.println("' on all cells");
+      display_letter_on_all_cells(letter);
+      return;
     }
   }
+
+  if (commaIndex == -1 && (target.equalsIgnoreCase("clear") || target.equalsIgnoreCase("space"))) {
+    Serial.println("Clearing all cells");
+    display_letter_on_all_cells(' ');
+    return;
+  }
+
+  // Single servo: "<index>,<pwm|min|max>".
+  if (commaIndex == -1) {
+    Serial.print("Unknown command: ");
+    Serial.println(command);
+    return;
+  }
+
+  int servoIndex = target.toInt();
+  if (servoIndex < 0 || servoIndex >= TOTAL_SERVOS) {
+    Serial.print("Servo index out of range: ");
+    Serial.println(target);
+    return;
+  }
+
+  uint16_t pwmValue;
+  if (value.equalsIgnoreCase("min")) {
+    pwmValue = servo_range[servoIndex].retracted;
+  } else if (value.equalsIgnoreCase("max")) {
+    pwmValue = servo_range[servoIndex].extended;
+  } else {
+    pwmValue = value.toInt();
+  }
+
+  Serial.print("Setting servo ");
+  Serial.print(servoIndex);
+  Serial.print(" to PWM ");
+  Serial.println(pwmValue);
+
+  set_servo_from_global_index(servoIndex, pwmValue);
 }

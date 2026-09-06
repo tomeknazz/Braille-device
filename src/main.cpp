@@ -2,16 +2,87 @@
 #include <Adafruit_PWMServoDriver.h>
 
 // --- Configuration Constants ---
-#define PIN_RETRACTED 120
-#define PIN_EXTENDED 520
+// Fallback values used to seed the per-servo calibration table below.
+#define DEFAULT_RETRACTED 120
+#define DEFAULT_EXTENDED 160
+
+// Absolute PWM limits - protects the servos from being driven past their stops.
+#define PWM_MIN 90
+#define PWM_MAX 520
 
 #define CASCADE_DELAY_MS 20
 #define PINS_PER_CELL 6
 #define MAX_CELLS 5
 #define SERVOS_PER_MODULE 16
 
+#define TOTAL_SERVOS (MAX_CELLS * PINS_PER_CELL)
+
 #define MODULE_1_I2C_ADDR 0x40
 #define MODULE_2_I2C_ADDR 0x41
+
+static_assert(TOTAL_SERVOS <= 2 * SERVOS_PER_MODULE,
+              "More servos requested than the two PCA9685 modules can drive");
+
+// --- Per-servo calibration table ---
+// Every servo is mounted at a slightly different angle and some of them are
+// mirrored, so a single global pair of values does not fit all of them.
+// `retracted` is the PWM tick count for "dot down", `extended` for "dot up".
+// For a mirrored servo `retracted` will be numerically GREATER than `extended` -
+// that is expected and handled correctly by the code below.
+//
+// How to calibrate:
+//   1. Flash this firmware and open the serial monitor at 115200 baud.
+//   2. Send "<index>,<pwm>" (e.g. "7,430") and step the value until the pin
+//      sits exactly where you want it.
+//   3. Write the two values you found into the row for that servo here.
+//   4. Send "<index>,min" / "<index>,max" to verify the stored values, or
+//      "dump" to print the whole table. "min" / "max" alone sweep every pin.
+struct ServoRange {
+  uint16_t retracted;  // dot down
+  uint16_t extended;   // dot up
+};
+
+const ServoRange servo_range[TOTAL_SERVOS] = {
+  // --- Cell 0 (servos 0-5) ---
+  {470, 430},  //  0 - dot 1 {480, 440}
+  {DEFAULT_RETRACTED, 160},  //  1 - dot 2 DEFAULT_RETRACTED, 160
+  {140, 180},  //  2 - dot 3  140, 180
+  {DEFAULT_RETRACTED, 160},  //  3 - dot 4 DEFAULT_RETRACTED, 160
+  {170, 210},  //  4 - dot 5 160, 210
+  {500, 460},  //  5 - dot 6 500, 460
+
+  // --- Cell 1 (servos 6-11) ---
+  {140, 105},  //  6 - dot 1
+  {DEFAULT_RETRACTED, 150},  //  7 - dot 2 DEFAULT_RETRACTED, 150
+  {115, 130},  //  8 - dot 3 115, 130
+  {120, 160},  //  9 - dot 4
+  {150, 195},  // 10 - dot 5
+  {495, 470},  // 11 - dot 6 500, 480 
+  
+  // --- Cell 2 (servos 12-17) ---
+  {510, 470},  // 12 - dot 1 510, 470
+  {DEFAULT_RETRACTED, 175},  // 13 - dot 2 DEFAULT_RETRACTED, 160
+  {130, 170},  // 14 - dot 3 130, 170
+  {130, DEFAULT_EXTENDED},  // 15 - dot 4 130, DEFAULT_EXTENDED
+  {DEFAULT_RETRACTED, 160},  // 16 - dot 5 DEFAULT_RETRACTED, 160
+  {490, 450},  // 17 - dot 6 490, 450
+
+  // --- Cell 3 (servos 18-23) ---
+  {500, 455},  // 18 - dot 1
+  {DEFAULT_RETRACTED, 170},  // 19 - dot 2 DEFAULT_RETRACTED, 160
+  {110, 135},  // 20 - dot 3 110, 135
+  {135, 175},  // 21 - dot 4
+  {135, 180},  // 22 - dot 5 120, 160
+  {490, 450},  // 23 - dot 6
+
+  // --- Cell 4 (servos 24-29) ---
+  {485, 450},  // 24 - dot 1 490, 450
+  {150, 190},  // 25 - dot 2
+  {150, 185},  // 26 - dot 3
+  {110, 140},  // 27 - dot 4
+  {120, 170},  // 28 - dot 5
+  {510, 470},  // 29 - dot 6
+};
 
 // Braille Alphabet Dictionary (A-Z)
 // 1 means pin extended (Maximum), 0 means pin retracted (Minimum)
@@ -50,15 +121,27 @@ Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(MODULE_1_I2C_ADDR);
 Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(MODULE_2_I2C_ADDR);
 
 // --- 1. Hardware Abstraction Layer Function ---
-// Sets any of the 30 servos to the desired position, automatically selecting the module.
-void set_servo_from_global_index(uint8_t servo_index, bool is_extended) {
-  uint16_t pwm_value = is_extended ? PIN_EXTENDED : PIN_RETRACTED;
-  
+// Sets any of the 30 servos to a raw PWM value, automatically selecting the module.
+void set_servo_from_global_index(uint8_t servo_index, uint16_t pwm_value) {
+  if (servo_index >= TOTAL_SERVOS) return;
+
+  // Never drive a servo outside of the safe mechanical range.
+  if (pwm_value < PWM_MIN) pwm_value = PWM_MIN;
+  if (pwm_value > PWM_MAX) pwm_value = PWM_MAX;
+
   if (servo_index < SERVOS_PER_MODULE) {
     pwm1.setPWM(servo_index, 0, pwm_value);
   } else {
-    pwm2.setPWM(servo_index - SERVOS_PER_MODULE, 0, pwm_value); 
+    pwm2.setPWM(servo_index - SERVOS_PER_MODULE, 0, pwm_value);
   }
+}
+
+// Moves a servo to its own calibrated end position instead of a global one.
+void set_servo_state(uint8_t servo_index, bool is_extended) {
+  if (servo_index >= TOTAL_SERVOS) return;
+
+  const ServoRange &range = servo_range[servo_index];
+  set_servo_from_global_index(servo_index, is_extended ? range.extended : range.retracted);
 }
 
 // --- 2. Character Translation Function ---
@@ -66,10 +149,10 @@ void set_servo_from_global_index(uint8_t servo_index, bool is_extended) {
 // module_position - which braille cell to display the letter on (from 0 to MAX_CELLS - 1)
 void display_letter(char letter, uint8_t module_position) {
   // Protection against exceeding the maximum cell limit
-  if (module_position >= MAX_CELLS) return; 
+  if (module_position >= MAX_CELLS) return;
 
   // Convert lowercase letter to uppercase to avoid errors
-  letter = toupper(letter); 
+  letter = toupper(letter);
 
   // Calculate the starting servo index for this module
   uint8_t base_servo_index = module_position * PINS_PER_CELL;
@@ -77,8 +160,8 @@ void display_letter(char letter, uint8_t module_position) {
   // Clear the module for a space character
   if (letter == ' ') {
     for (uint8_t i = 0; i < PINS_PER_CELL; i++) {
-      set_servo_from_global_index(base_servo_index + i, false);
-      delay(CASCADE_DELAY_MS); 
+      set_servo_state(base_servo_index + i, false);
+      delay(CASCADE_DELAY_MS);
     }
     return;
   }
@@ -86,15 +169,59 @@ void display_letter(char letter, uint8_t module_position) {
   // Check if the letter is in the A-Z range
   if (letter >= 'A' && letter <= 'Z') {
     uint8_t alphabet_index = letter - 'A';
-    
+
     // Iterate through the points of the Braille cell
     for (uint8_t i = 0; i < PINS_PER_CELL; i++) {
       bool state = braille_alphabet[alphabet_index][i];
-      set_servo_from_global_index(base_servo_index + i, state);
-      
-      delay(CASCADE_DELAY_MS); 
+      set_servo_state(base_servo_index + i, state);
+
+      delay(CASCADE_DELAY_MS);
     }
   }
+}
+
+// Prints the calibration table so the current values can be copied back into the source.
+void dump_calibration() {
+  Serial.println("index,cell,dot,retracted,extended");
+  for (uint8_t i = 0; i < TOTAL_SERVOS; i++) {
+    Serial.print(i);
+    Serial.print(',');
+    Serial.print(i / PINS_PER_CELL);
+    Serial.print(',');
+    Serial.print(i % PINS_PER_CELL + 1);
+    Serial.print(',');
+    Serial.print(servo_range[i].retracted);
+    Serial.print(',');
+    Serial.println(servo_range[i].extended);
+  }
+}
+
+// Drives every pin in the device to one of its calibrated end positions.
+// The servos are stepped one after another (cascade effect), which also keeps
+// the peak current draw down compared to moving all 30 of them at once.
+void set_all_servos(bool is_extended) {
+  for (uint8_t i = 0; i < TOTAL_SERVOS; i++) {
+    set_servo_state(i, is_extended);
+    delay(CASCADE_DELAY_MS);
+  }
+}
+
+// Shows the same letter on every braille cell of the device.
+void display_letter_on_all_cells(char letter) {
+  for (uint8_t cell = 0; cell < MAX_CELLS; cell++) {
+    display_letter(letter, cell);
+  }
+}
+
+void print_help() {
+  Serial.println("Servo tester ready.");
+  Serial.println("  <index>,<pwm>  - raw PWM value");
+  Serial.println("  <index>,min    - calibrated retracted position");
+  Serial.println("  <index>,max    - calibrated extended position");
+  Serial.println("  min | max      - all pins down / up, one by one");
+  Serial.println("  <letter>       - show an A-Z letter on every cell");
+  Serial.println("  clear          - retract every cell (braille space)");
+  Serial.println("  dump           - print the calibration table");
 }
 
 void setup() {
@@ -106,38 +233,100 @@ void setup() {
   pwm2.begin();
   pwm2.setOscillatorFrequency(27000000);
   pwm2.setPWMFreq(50); // Standard 50Hz for SG90
-  
+
   delay(1000);
+
+  print_help();
 }
 
 void loop() {
-  // Przejście przez wszystkie litery od A do Z
-  /*
-  for (char test_letter = 'A'; test_letter <= 'Z'; test_letter++) {
-    Serial.print("Testowanie litery: ");
-    Serial.println(test_letter);
-    
-    display_letter(test_letter, 2);
-    //delay(500);
-    //display_letter(test_letter, 1);
-    //delay(500);
-    //display_letter(test_letter, 2);
-    //delay(500);
-    //display_letter(test_letter, 3);
-    //delay(500);
-    //display_letter(test_letter, 4);
-    //delay(500);
+  if (Serial.available() <= 0) return;
+
+  String command = Serial.readStringUntil('\n');
+  command.trim();
+  if (command.length() == 0) return;
+
+  // Split "<target>,<value>"; commands without a comma leave value empty.
+  int commaIndex = command.indexOf(',');
+  String target = (commaIndex == -1) ? command : command.substring(0, commaIndex);
+  String value = (commaIndex == -1) ? String("") : command.substring(commaIndex + 1);
+  target.trim();
+  value.trim();
+
+  if (target.equalsIgnoreCase("dump")) {
+    dump_calibration();
+    return;
+  }
+
+  if (target.equalsIgnoreCase("help") || target == "?") {
+    print_help();
+    return;
+  }
+
+  // Whole device: "min" / "max" (also accepted as "all,min" / "all,max").
+  bool wholeDevice = target.equalsIgnoreCase("all");
+  String endstop = wholeDevice ? value : target;
+  if (endstop.equalsIgnoreCase("min") || endstop.equalsIgnoreCase("max")) {
+    if (wholeDevice || commaIndex == -1) {
+      bool is_extended = endstop.equalsIgnoreCase("max");
+      Serial.print("Setting all servos to ");
+      Serial.println(is_extended ? "max" : "min");
+      set_all_servos(is_extended);
+      return;
     }
-    */
-    
-    display_letter(' ',0);
-    display_letter(' ',1);
-    display_letter(' ',2);
-    display_letter(' ',3);
-    display_letter(' ',4);
+  }
 
+  if (wholeDevice) {
+    Serial.print("Expected \"all,min\" or \"all,max\", got: ");
+    Serial.println(command);
+    return;
+  }
 
-    delay(500); // Sekunda przerwy na obserwację mechanizmu
-  
-  
+  // A single letter shows that character on every cell at once.
+  if (commaIndex == -1 && target.length() == 1) {
+    char letter = toupper(target.charAt(0));
+    if (letter >= 'A' && letter <= 'Z') {
+      Serial.print("Displaying '");
+      Serial.print(letter);
+      Serial.println("' on all cells");
+      display_letter_on_all_cells(letter);
+      return;
+    }
+  }
+
+  if (commaIndex == -1 && (target.equalsIgnoreCase("clear") || target.equalsIgnoreCase("space"))) {
+    Serial.println("Clearing all cells");
+    display_letter_on_all_cells(' ');
+    return;
+  }
+
+  // Single servo: "<index>,<pwm|min|max>".
+  if (commaIndex == -1) {
+    Serial.print("Unknown command: ");
+    Serial.println(command);
+    return;
+  }
+
+  int servoIndex = target.toInt();
+  if (servoIndex < 0 || servoIndex >= TOTAL_SERVOS) {
+    Serial.print("Servo index out of range: ");
+    Serial.println(target);
+    return;
+  }
+
+  uint16_t pwmValue;
+  if (value.equalsIgnoreCase("min")) {
+    pwmValue = servo_range[servoIndex].retracted;
+  } else if (value.equalsIgnoreCase("max")) {
+    pwmValue = servo_range[servoIndex].extended;
+  } else {
+    pwmValue = value.toInt();
+  }
+
+  Serial.print("Setting servo ");
+  Serial.print(servoIndex);
+  Serial.print(" to PWM ");
+  Serial.println(pwmValue);
+
+  set_servo_from_global_index(servoIndex, pwmValue);
 }

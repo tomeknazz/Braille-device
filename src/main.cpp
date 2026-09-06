@@ -4,7 +4,7 @@
 // --- Configuration Constants ---
 // Fallback values used to seed the per-servo calibration table below.
 #define DEFAULT_RETRACTED 120
-#define DEFAULT_EXTENDED 520
+#define DEFAULT_EXTENDED 160
 
 // Absolute PWM limits - protects the servos from being driven past their stops.
 #define PWM_MIN 90
@@ -44,44 +44,44 @@ struct ServoRange {
 
 const ServoRange servo_range[TOTAL_SERVOS] = {
   // --- Cell 0 (servos 0-5) ---
-  {DEFAULT_RETRACTED-10, 140},  //  0 - dot 1
-  {510, 480},  //  1 - dot 2
-  {120, 160},  //  2 - dot 3
-  {140, 90},  //  3 - dot 4
-  {100, 150},  //  4 - dot 5
-  {120, 160},  //  5 - dot 6
+  {470, 430},  //  0 - dot 1 {480, 440}
+  {DEFAULT_RETRACTED, 160},  //  1 - dot 2 DEFAULT_RETRACTED, 160
+  {140, 180},  //  2 - dot 3  140, 180
+  {DEFAULT_RETRACTED, 160},  //  3 - dot 4 DEFAULT_RETRACTED, 160
+  {160, 210},  //  4 - dot 5 160, 210
+  {500, 460},  //  5 - dot 6 500, 460
 
   // --- Cell 1 (servos 6-11) ---
-  {500, 460},  //  6 - dot 1
-  {490, 450},  //  7 - dot 2
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  //  8 - dot 3
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  //  9 - dot 4
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 10 - dot 5
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 11 - dot 6
-
+  {140, 105},  //  6 - dot 1
+  {DEFAULT_RETRACTED, 150},  //  7 - dot 2 DEFAULT_RETRACTED, 150
+  {115, 130},  //  8 - dot 3 115, 130
+  {120, 160},  //  9 - dot 4
+  {150, 190},  // 10 - dot 5
+  {500, 480},  // 11 - dot 6 500, 480 
+  
   // --- Cell 2 (servos 12-17) ---
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 12 - dot 1
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 13 - dot 2
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 14 - dot 3
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 15 - dot 4
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 16 - dot 5
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 17 - dot 6
+  {510, 470},  // 12 - dot 1 510, 470
+  {DEFAULT_RETRACTED, 160},  // 13 - dot 2 DEFAULT_RETRACTED, 160
+  {130, 170},  // 14 - dot 3 130, 170
+  {130, DEFAULT_EXTENDED},  // 15 - dot 4 130, DEFAULT_EXTENDED
+  {DEFAULT_RETRACTED, 160},  // 16 - dot 5 DEFAULT_RETRACTED, 160
+  {490, 450},  // 17 - dot 6 490, 450
 
   // --- Cell 3 (servos 18-23) ---
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 18 - dot 1
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 19 - dot 2
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 20 - dot 3
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 21 - dot 4
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 22 - dot 5
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 23 - dot 6
+  {510, 455},  // 18 - dot 1
+  {DEFAULT_RETRACTED, 160},  // 19 - dot 2 DEFAULT_RETRACTED, 160
+  {110, 135},  // 20 - dot 3 110, 135
+  {135, 155},  // 21 - dot 4
+  {120, 160},  // 22 - dot 5 120, 160
+  {490, 450},  // 23 - dot 6
 
   // --- Cell 4 (servos 24-29) ---
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 24 - dot 1
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 25 - dot 2
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 26 - dot 3
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 27 - dot 4
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 28 - dot 5
-  {DEFAULT_RETRACTED, DEFAULT_EXTENDED},  // 29 - dot 6
+  {490, 450},  // 24 - dot 1 490, 450
+  {DEFAULT_RETRACTED, 180},  // 25 - dot 2
+  {140, 180},  // 26 - dot 3
+  {110, 140},  // 27 - dot 4
+  {120, 165},  // 28 - dot 5
+  {510, 470},  // 29 - dot 6
 };
 
 // Braille Alphabet Dictionary (A-Z)

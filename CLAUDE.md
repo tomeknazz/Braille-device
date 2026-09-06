@@ -60,6 +60,21 @@ poprawne i obsługiwane; kod nigdzie nie zakłada, że min < max.
 4. `<index>,min` / `<index>,max` — weryfikacja zapisanych wartości.
 5. `dump` — wypisuje całą tablicę jako CSV (`index,cell,dot,retracted,extended`).
 
+### Komendy testera (Serial, 115200)
+
+| Komenda | Działanie |
+|---|---|
+| `<index>,<pwm>` | Surowy PWM na jedno serwo (kalibracja) |
+| `<index>,min` / `<index>,max` | Jedno serwo do pozycji z tablicy |
+| `min` / `max` (lub `all,min` / `all,max`) | Wszystkie 30 pinów, kaskadą co `CASCADE_DELAY_MS` |
+| `<litera>` | Litera A–Z na **wszystkich** komórkach naraz |
+| `clear` / `space` | Chowa wszystkie punkty (spacja brajlowska) |
+| `dump` | CSV z tablicą kalibracji |
+| `help` / `?` | Lista komend |
+
+Nic nie rusza 30 serw jednocześnie — każdy ruch idzie kaskadą, co ogranicza
+szczytowy pobór prądu.
+
 ## Konwencje
 
 - Kod i komentarze w `src/main.cpp` — po angielsku.

@@ -1,0 +1,393 @@
+{
+  "version": 1,
+  "description": "Polski alfabet Braille'a dla aplikacji BrailleLab. mask = suma 2^(punkt-1); znak Unicode = U+2800 + mask.",
+  "source": "docs/PROPOZYCJA.md §5, docs/DYDAKTYKA.md §1. Litery a–z zgodne z braille_alphabet w src/main.cpp. Do potwierdzenia: tablice Komisji ds. Brajla przy PZN / liblouis (tabele polskie).",
+  "letters": [
+    {
+      "char": "a",
+      "name": "a",
+      "dots": [1],
+      "mask": 1,
+      "verified": true
+    },
+    {
+      "char": "b",
+      "name": "be",
+      "dots": [1,2],
+      "mask": 3,
+      "verified": true
+    },
+    {
+      "char": "c",
+      "name": "ce",
+      "dots": [1,4],
+      "mask": 9,
+      "verified": true
+    },
+    {
+      "char": "d",
+      "name": "de",
+      "dots": [1,4,5],
+      "mask": 25,
+      "verified": true
+    },
+    {
+      "char": "e",
+      "name": "e",
+      "dots": [1,5],
+      "mask": 17,
+      "verified": true
+    },
+    {
+      "char": "f",
+      "name": "ef",
+      "dots": [1,2,4],
+      "mask": 11,
+      "verified": true
+    },
+    {
+      "char": "g",
+      "name": "gie",
+      "dots": [1,2,4,5],
+      "mask": 27,
+      "verified": true
+    },
+    {
+      "char": "h",
+      "name": "ha",
+      "dots": [1,2,5],
+      "mask": 19,
+      "verified": true
+    },
+    {
+      "char": "i",
+      "name": "i",
+      "dots": [2,4],
+      "mask": 10,
+      "verified": true
+    },
+    {
+      "char": "j",
+      "name": "jot",
+      "dots": [2,4,5],
+      "mask": 26,
+      "verified": true
+    },
+    {
+      "char": "k",
+      "name": "ka",
+      "dots": [1,3],
+      "mask": 5,
+      "verified": true
+    },
+    {
+      "char": "l",
+      "name": "el",
+      "dots": [1,2,3],
+      "mask": 7,
+      "verified": true
+    },
+    {
+      "char": "m",
+      "name": "em",
+      "dots": [1,3,4],
+      "mask": 13,
+      "verified": true
+    },
+    {
+      "char": "n",
+      "name": "en",
+      "dots": [1,3,4,5],
+      "mask": 29,
+      "verified": true
+    },
+    {
+      "char": "o",
+      "name": "o",
+      "dots": [1,3,5],
+      "mask": 21,
+      "verified": true
+    },
+    {
+      "char": "p",
+      "name": "pe",
+      "dots": [1,2,3,4],
+      "mask": 15,
+      "verified": true
+    },
+    {
+      "char": "q",
+      "name": "ku",
+      "dots": [1,2,3,4,5],
+      "mask": 31,
+      "verified": true
+    },
+    {
+      "char": "r",
+      "name": "er",
+      "dots": [1,2,3,5],
+      "mask": 23,
+      "verified": true
+    },
+    {
+      "char": "s",
+      "name": "es",
+      "dots": [2,3,4],
+      "mask": 14,
+      "verified": true
+    },
+    {
+      "char": "t",
+      "name": "te",
+      "dots": [2,3,4,5],
+      "mask": 30,
+      "verified": true
+    },
+    {
+      "char": "u",
+      "name": "u",
+      "dots": [1,3,6],
+      "mask": 37,
+      "verified": true
+    },
+    {
+      "char": "v",
+      "name": "fał",
+      "dots": [1,2,3,6],
+      "mask": 39,
+      "verified": true
+    },
+    {
+      "char": "w",
+      "name": "wu",
+      "dots": [2,4,5,6],
+      "mask": 58,
+      "verified": true
+    },
+    {
+      "char": "x",
+      "name": "iks",
+      "dots": [1,3,4,6],
+      "mask": 45,
+      "verified": true
+    },
+    {
+      "char": "y",
+      "name": "igrek",
+      "dots": [1,3,4,5,6],
+      "mask": 61,
+      "verified": true
+    },
+    {
+      "char": "z",
+      "name": "zet",
+      "dots": [1,3,5,6],
+      "mask": 53,
+      "verified": true
+    },
+    {
+      "char": "ą",
+      "name": "a z ogonkiem",
+      "dots": [1,6],
+      "mask": 33,
+      "verified": true
+    },
+    {
+      "char": "ć",
+      "name": "ce z kreską",
+      "dots": [1,4,6],
+      "mask": 41,
+      "verified": true
+    },
+    {
+      "char": "ę",
+      "name": "e z ogonkiem",
+      "dots": [1,5,6],
+      "mask": 49,
+      "verified": true
+    },
+    {
+      "char": "ł",
+      "name": "eł",
+      "dots": [1,2,6],
+      "mask": 35,
+      "verified": true
+    },
+    {
+      "char": "ń",
+      "name": "en z kreską",
+      "dots": [1,4,5,6],
+      "mask": 57,
+      "verified": true
+    },
+    {
+      "char": "ó",
+      "name": "o z kreską",
+      "dots": [3,4,6],
+      "mask": 44,
+      "verified": true
+    },
+    {
+      "char": "ś",
+      "name": "es z kreską",
+      "dots": [2,4,6],
+      "mask": 42,
+      "verified": true
+    },
+    {
+      "char": "ź",
+      "name": "zet z kreską",
+      "dots": [2,3,4,6],
+      "mask": 46,
+      "verified": true
+    },
+    {
+      "char": "ż",
+      "name": "zet z kropką",
+      "dots": [1,2,3,4,6],
+      "mask": 47,
+      "verified": true
+    }
+  ],
+  "signs": [
+    {
+      "id": "number",
+      "name": "znak liczby",
+      "dots": [3,4,5,6],
+      "mask": 60,
+      "verified": true,
+      "note": "Poprzedza ciąg cyfr; cyfry 1–9, 0 to litery a–j."
+    },
+    {
+      "id": "capital",
+      "name": "znak wielkiej litery",
+      "dots": [4,6],
+      "mask": 40,
+      "verified": false,
+      "note": "SPRAWDZIĆ z normą PZN (46 czy 6). Podwójny znak = cały wyraz wielkimi literami."
+    }
+  ],
+  "digits": [
+    {
+      "char": "1",
+      "letter": "a",
+      "dots": [1],
+      "mask": 1,
+      "verified": true
+    },
+    {
+      "char": "2",
+      "letter": "b",
+      "dots": [1,2],
+      "mask": 3,
+      "verified": true
+    },
+    {
+      "char": "3",
+      "letter": "c",
+      "dots": [1,4],
+      "mask": 9,
+      "verified": true
+    },
+    {
+      "char": "4",
+      "letter": "d",
+      "dots": [1,4,5],
+      "mask": 25,
+      "verified": true
+    },
+    {
+      "char": "5",
+      "letter": "e",
+      "dots": [1,5],
+      "mask": 17,
+      "verified": true
+    },
+    {
+      "char": "6",
+      "letter": "f",
+      "dots": [1,2,4],
+      "mask": 11,
+      "verified": true
+    },
+    {
+      "char": "7",
+      "letter": "g",
+      "dots": [1,2,4,5],
+      "mask": 27,
+      "verified": true
+    },
+    {
+      "char": "8",
+      "letter": "h",
+      "dots": [1,2,5],
+      "mask": 19,
+      "verified": true
+    },
+    {
+      "char": "9",
+      "letter": "i",
+      "dots": [2,4],
+      "mask": 10,
+      "verified": true
+    },
+    {
+      "char": "0",
+      "letter": "j",
+      "dots": [2,4,5],
+      "mask": 26,
+      "verified": true
+    }
+  ],
+  "punctuation": [
+    {
+      "char": ".",
+      "name": "kropka",
+      "dots": [3],
+      "mask": 4,
+      "verified": false
+    },
+    {
+      "char": ",",
+      "name": "przecinek",
+      "dots": [2],
+      "mask": 2,
+      "verified": false
+    },
+    {
+      "char": ";",
+      "name": "średnik",
+      "dots": [2,3],
+      "mask": 6,
+      "verified": false
+    },
+    {
+      "char": ":",
+      "name": "dwukropek",
+      "dots": [2,5],
+      "mask": 18,
+      "verified": false
+    },
+    {
+      "char": "?",
+      "name": "pytajnik",
+      "dots": [2,6],
+      "mask": 34,
+      "verified": false
+    },
+    {
+      "char": "!",
+      "name": "wykrzyknik",
+      "dots": [2,3,5],
+      "mask": 22,
+      "verified": false
+    },
+    {
+      "char": "-",
+      "name": "łącznik",
+      "dots": [3,6],
+      "mask": 36,
+      "verified": false
+    }
+  ]
+}

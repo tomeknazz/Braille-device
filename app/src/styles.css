@@ -1,0 +1,339 @@
+/* BrailleLab — high contrast, keyboard-first, light/dark. */
+
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #3d3d3d;
+  --panel: #f4f4f4;
+  --border: #1a1a1a;
+  --accent: #0b4fb3;
+  --accent-fg: #ffffff;
+  --focus: #b3006b;
+  --dot-on: #111111;
+  --dot-on-text: #ffffff;
+  --dot-off: #6b6b6b;
+  --cell-bg: #ffffff;
+  --warn-bg: #fff4d6;
+  --warn-border: #8a5a00;
+  --err-bg: #fde8e8;
+  --err-border: #a30000;
+  --ok-border: #1d6b2f;
+  --log-in: #1d6b2f;
+  --log-out: #0b4fb3;
+  --log-err: #a30000;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0e0e0e;
+    --fg: #f5f5f5;
+    --muted: #c9c9c9;
+    --panel: #1b1b1b;
+    --border: #e6e6e6;
+    --accent: #7fb2ff;
+    --accent-fg: #0e0e0e;
+    --focus: #ffd24d;
+    --dot-on: #f5f5f5;
+    --dot-on-text: #0e0e0e;
+    --dot-off: #a0a0a0;
+    --cell-bg: #0e0e0e;
+    --warn-bg: #2d2300;
+    --warn-border: #ffcc4d;
+    --err-bg: #330909;
+    --err-border: #ff7a7a;
+    --ok-border: #6fd88a;
+    --log-in: #6fd88a;
+    --log-out: #7fb2ff;
+    --log-err: #ff7a7a;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 112.5%; /* 18px base */
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--accent-fg);
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+.site-header,
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.site-header h1 {
+  margin: 1rem 0 0;
+  font-size: 2rem;
+}
+.tagline {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0 0 1rem;
+}
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.3rem;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+main:focus {
+  outline: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 600;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-style: dashed;
+}
+button[aria-pressed='true'] {
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+label {
+  font-weight: 600;
+}
+input[type='text'] {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.6rem;
+  border: 2px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: var(--fg);
+}
+.field {
+  margin: 0 0 0.75rem;
+}
+.checkbox {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-weight: normal;
+}
+.checkbox input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.status-line {
+  margin: 0.5rem 0 0;
+}
+.status-label {
+  font-weight: 600;
+}
+
+.notice {
+  border: 2px solid var(--warn-border);
+  background: var(--warn-bg);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
+}
+.notice.error {
+  border-color: var(--err-border);
+  background: var(--err-bg);
+}
+.hint {
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.braille-text {
+  font-size: 1.8rem;
+  letter-spacing: 0.15em;
+  word-break: break-all;
+}
+
+.mode-list-planned {
+  color: var(--muted);
+  margin: 0.25rem 0 1rem;
+}
+
+/* --- Preview ----------------------------------------------------------- */
+
+.preview-figure {
+  margin: 0;
+}
+.preview-svg {
+  width: 100%;
+  max-width: 44rem;
+  height: auto;
+  display: block;
+}
+.preview-svg .cell-frame {
+  fill: var(--cell-bg);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+.preview-svg .dot-on {
+  fill: var(--dot-on);
+  stroke: var(--dot-on);
+  stroke-width: 2;
+}
+.preview-svg .dot-off {
+  fill: none;
+  stroke: var(--dot-off);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.preview-svg .dot-num-on {
+  fill: var(--dot-on-text);
+  font-weight: 700;
+}
+.preview-svg .dot-num-off {
+  fill: var(--muted);
+}
+.preview-svg .cell-num {
+  fill: var(--fg);
+  font-weight: 600;
+}
+.preview-svg text {
+  font-family: system-ui, sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.preview.unknown .preview-svg {
+  opacity: 0.4;
+}
+.preview-caption {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.25rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+.preview-state {
+  font-weight: 600;
+  margin: 0.5rem 0 0;
+}
+
+/* --- Protocol log -------------------------------------------------------- */
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 2rem;
+}
+.log-list {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.85rem;
+  max-height: 18rem;
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  list-style: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.log-list li.out {
+  color: var(--log-out);
+}
+.log-list li.in {
+  color: var(--log-in);
+}
+.log-list li.err {
+  color: var(--log-err);
+  font-weight: 600;
+}
+.log-list li.info {
+  color: var(--muted);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .preview-svg .dot-on {
+    fill: CanvasText;
+    stroke: CanvasText;
+  }
+  .preview-svg .dot-num-on {
+    fill: Canvas;
+  }
+  .preview-svg .dot-off {
+    stroke: CanvasText;
+  }
+}

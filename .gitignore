@@ -3,9 +3,15 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-lib
-test
+/lib
+/test
 *.ini
-include
+!platformio.ini
+/include
 .vscode
 .cache
+
+# Web app
+node_modules/
+app/dist/
+app/coverage/

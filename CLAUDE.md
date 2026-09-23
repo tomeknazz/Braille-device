@@ -9,6 +9,52 @@ Podział odpowiedzialności: **firmware = „głupi wyświetlacz”** (przyjmuje
 punktów dla każdej komórki), **aplikacja = znaczenie** (alfabet, polskie znaki, cyfry,
 tryby nauki, dźwięk, postępy). Nowe znaki dodaje się w JSON-ie aplikacji, nie w firmware.
 
+## Stan prac i następne kroki (aktualizuj na koniec każdej sesji)
+
+Branch roboczy: **`etap1-protocol-v1`** → otwarty **PR #2** do `master`
+(https://github.com/tomeknazz/Braille-device/pull/2). Opis PR opisuje tylko Etap 1 —
+do uzupełnienia o kurs, tryby i Powtórki.
+
+**Zrobione:**
+- Firmware 0.4.0, protokół v1 (poprawiony parser, `show`/`cell`/`get`/…, OK/ERR po ruchu,
+  stan wyświetlacza, idle). **Kompiluje się, ale NIE był jeszcze uruchomiony na ESP32.**
+- Aplikacja: Kurs L0–L7 z odblokowaniem, Poznaj znak, Rozpoznawanie, Powtórki (Leitner),
+  Słowa, Wyświetl tekst, mowa/sygnały/tryb czytnika ekranu, lista komend w sekcji serwisowej.
+- Testy: 485 (Vitest), typecheck i build zielone.
+
+**Najpierw przy urządzeniu — test sprzętowy firmware** (lista z opisu PR #2):
+`EVT boot` → `hello` (oba PCA9685 `ok`) → `7,430`, `7,min`, `dump` (kalibracja jak dawniej)
+→ `show,5,21,30` („kot”) → `7,mni` daje `ERR` i serwo się nie rusza → aplikacja łączy się
+przez USB. Zapisać wartości `ms=` z odpowiedzi (pomiary do pracy). Zwrócić uwagę, czy
+wyłączanie PWM schowanych punktów po 2 s nie powoduje problemów.
+
+**Dalej wg planu (`docs/PROPOZYCJA.md` §6, tydzień 7+):**
+1. Profile uczniów (IndexedDB), macierz pomyłek (`M[pokazany][odpowiedziany]`),
+   ekran „Postępy” dla nauczyciela, eksport CSV prób — dane do rozdziału ewaluacji.
+2. Pisanie akordami F D S J K L (umiejętność `write` w Leitnerze) + test ghostingu klawiatury;
+   „Znajdź inny” / „Porównaj” (`discriminate`).
+3. Nagrane MP3 nazw liter (syntezator źle czyta pojedyncze litery), testy z NVDA,
+   przegląd dostępności (axe-core, WCAG 2.2 AA).
+4. Opcjonalnie: minimum odpowiedzi, żeby przerwana sesja Powtórek się liczyła (dziś wystarczy 1).
+
+**Decyzje autora (nie zmieniać bez pytania):** odstępy Leitnera w sesjach (nie dniach);
+Powtórki liczą się do zaliczenia tylko dla bieżącej lekcji; podpowiedź z punktami (krok ≥ 2)
+= próba niepoprawna (`REVEALING_HINT`); znak wielkiej litery = punkty 4-6; znak ćwiczenia na
+komórce 2 (`QUIZ_CELL`/`ITEM_CELL` = 1); reguła dekad w Poznaj znak na dwa naciśnięcia.
+
+## Jak pracować w tym repo
+
+- **Windows / PowerShell:** `npm.ps1` jest blokowany przez politykę skryptów — używaj
+  `npm.cmd …` (albo Git Bash / cmd). Komendy aplikacji uruchamiaj w `app/`.
+- **Przed commitem** w `app/`: `npm.cmd run typecheck`, `npx vitest run`, `npm.cmd run build`;
+  zmiana w `src/main.cpp` → `pio run`. Raportuj faktyczne wyniki.
+- **Sprawdzenie w przeglądarce:** `npx vite --port 5199` w `app/`, Chrome → „Tryb symulacji”.
+  Po teście zatrzymaj serwer (proces `node … vite … 5199`).
+- Firmware i `MockDevice` muszą odpowiadać identycznie — zmiana protokołu = zmiana w obu,
+  w `docs/PROTOCOL.md` i w liście komend (`app/src/ui/commandReference.ts`; test porównuje
+  ją z `print_help()` w firmware).
+- Nie commituj ani nie pushuj bez prośby autora; commity po angielsku, rozmowa po polsku.
+
 ## Dokumentacja projektowa (`docs/`)
 
 | Plik | Zawartość |
@@ -26,15 +72,16 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
 - **Platforma:** PlatformIO, `board = denky32` (ESP32, mostek USB-UART), framework Arduino
 - **Biblioteka:** `adafruit/Adafruit PWM Servo Driver Library@^3.0.3`
 - **Build:** `pio run` · **Upload:** `pio run -t upload` · **Monitor:** `pio device monitor -b 115200`
-  - `pio` nie jest w PATH. Zainstalowany przez `pip install --user platformio`:
-    `$APPDATA/Python/Python314/Scripts/pio.exe` (Git Bash) /
-    `C:\Users\Admin\AppData\Roaming\Python\Python314\Scripts\pio.exe`
+  - Na komputerze w pracy `pio` nie jest w PATH (zainstalowany `pip install --user platformio`):
+    `$APPDATA/Python/Python314/Scripts/pio.exe` (Git Bash). Na innym komputerze sprawdź
+    `pio --version` / `python -m platformio --version`; brak → `pip install --user platformio`.
+    Pierwszy `pio run` pobiera toolchain ESP32 (kilka minut).
 - `platformio.ini` **jest w gicie** (`.gitignore` ma `*.ini` + wyjątek `!platformio.ini`).
 
 ### Aplikacja (`app/`)
 - Vite + TypeScript (strict) + Vitest, czysty DOM (bez frameworka UI), docelowo PWA.
-- `npm install` · `npm run dev` (localhost — Web Serial działa na localhost bez HTTPS)
-  · `npm test` · `npm run typecheck` · `npm run build`
+- `npm.cmd install` · `npm.cmd run dev` (localhost — Web Serial działa bez HTTPS)
+  · `npm.cmd test` · `npm.cmd run typecheck` · `npm.cmd run build` (Node 24)
 - Web Serial działa tylko w **Chrome/Edge na desktopie**. Bez urządzenia: „Tryb symulacji”
   (`MockDevice`).
 - Struktura: `src/braille/` (tabela `pl-braille.json` + translator + paginacja po 5
@@ -42,8 +89,8 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
   `src/learn/` (kurs, postępy, słowa), `src/modes/` (tryby), `src/audio/` (mowa, sygnały),
   `src/settings.ts`, `src/ui/`.
 - **Tryby:** Kurs (lista lekcji), Poznaj znak (znak na komórce 2, punkt po punkcie, reguły
-  dekad), Rozpoznawanie (quiz — **jedyny tryb zapisujący próby**; liczy się pierwsza
-  odpowiedź, podpowiedź z punktami = próba niepoprawna, stała `REVEALING_HINT`), Słowa
+  dekad), Rozpoznawanie (quiz — zapisuje próby kursu; liczy się pierwsza odpowiedź,
+  podpowiedź z punktami = próba niepoprawna, stała `REVEALING_HINT`), Słowa
   (`src/learn/words.json`, ≤ 5 komórek, tylko z odblokowanych liter), Wyświetl tekst,
   Powtórki (ten sam przebieg próby co Rozpoznawanie — `createRecognizeMode({ variant: 'review' })`).
 - **Powtórki Leitnera** (`src/learn/leitner.ts`, stan w `braillelab.leitner.v1`): 5 pudełek,
@@ -86,7 +133,7 @@ Zdarzenia `EVT key` są zarezerwowane w protokole na przyszłe przyciski.
 (bez `node_modules/`, `app/dist/`). Ignorowane: `/include`, `/lib`, `/test` (zakotwiczone
 do korzenia, żeby nie łapały katalogów w `app/`), `.vscode/`, `.cache/`, `.pio/`.
 
-Jedyny branch: `master` (dawny `tester` scalony w PR #1).
+Branche: `master` (dawny `tester` scalony w PR #1) i `etap1-protocol-v1` (PR #2, praca bieżąca).
 
 ## Protokół v1 (skrót — szczegóły w `docs/PROTOCOL.md`)
 

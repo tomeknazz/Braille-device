@@ -44,7 +44,16 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
 - **Tryby:** Kurs (lista lekcji), Poznaj znak (znak na komórce 2, punkt po punkcie, reguły
   dekad), Rozpoznawanie (quiz — **jedyny tryb zapisujący próby**; liczy się pierwsza
   odpowiedź, podpowiedź z punktami = próba niepoprawna, stała `REVEALING_HINT`), Słowa
-  (`src/learn/words.json`, ≤ 5 komórek, tylko z odblokowanych liter), Wyświetl tekst.
+  (`src/learn/words.json`, ≤ 5 komórek, tylko z odblokowanych liter), Wyświetl tekst,
+  Powtórki (ten sam przebieg próby co Rozpoznawanie — `createRecognizeMode({ variant: 'review' })`).
+- **Powtórki Leitnera** (`src/learn/leitner.ts`, stan w `braillelab.leitner.v1`): 5 pudełek,
+  odstępy w **sesjach powtórek** (1, 2, 4, 8, 16). Awans tylko karty zaległej (lub nowej)
+  przy odpowiedzi poprawnej, bez odkrywającej podpowiedzi i szybkiej (≤ min(6 s, 1,5 × mediana
+  ucznia)); wolna/z podpowiedzią — zostaje; błąd — pudełko 1. Ćwiczenie przed terminem nie
+  przesuwa terminu. Sesja: ~60% zaległe, ~30% bieżąca lekcja, ~10% nowe, 20 prób; pomyłka
+  wraca raz w tej samej sesji. Oba quizy aktualizują pudełka; Powtórki zapisują próby kursu
+  tylko dla bieżącej lekcji. Licznik sesji rośnie po zakończeniu Powtórek (także przerwanych
+  — zamykane przy następnym Starcie).
 - **Informacja zwrotna:** tryby mówią przez `ctx.say()` (aria-live + synteza pl-PL, a przy
   włączonej opcji „Używam czytnika ekranu” tylko aria-live) i `ctx.tone()`. Polecenie
   „dotknij” pada dopiero po `OK` z urządzenia. Skróty: F1 powtórz, F2 podpowiedź,

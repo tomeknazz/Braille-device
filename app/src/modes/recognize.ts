@@ -1,6 +1,9 @@
-// Mode "Rozpoznawanie" (docs/DYDAKTYKA.md §4.4, §4.9, §5.3): the basic quiz.
-// One character on cell 2, the learner types what it is. This is the mode
-// that records attempts, so it is what passes lessons and unlocks the next.
+// Modes "Rozpoznawanie" and "Powtórki" (docs/DYDAKTYKA.md §4.4, §4.9, §5.3,
+// §6.1): the quiz. One character on cell 2, the learner types what it is.
+// Both variants share the trial below and differ only in where items come
+// from: one chosen lesson, or a Leitner review plan across all unlocked
+// lessons. Both move Leitner cards; course attempts (which pass lessons) are
+// recorded by Rozpoznawanie always, by Powtórki only for the current lesson.
 //
 // Trial: clear -> 300 ms -> show on cell 2 -> (after the device confirms)
 // ready tone + prompt, start the clock. Only the first answer of a trial is
@@ -13,9 +16,19 @@ import { dotsToMask, letterByChar, maskToDots, table } from '../braille/table';
 import { sameCells } from '../device/protocol';
 import type { CommandResult } from '../device/DeviceLink';
 import { curriculum, lessonById, type Lesson, type LessonItem } from '../learn/curriculum';
+import {
+  cardKey,
+  DEFAULT_SESSION_SIZE,
+  dueCount,
+  planSession,
+  requeueIndex,
+  type AnswerKind,
+  type Box,
+  type Candidate,
+} from '../learn/leitner';
 import type { Attempt, RecordResult } from '../learn/progress';
-import { progress, recordAttempt } from '../learn/session';
-import { describeStats } from './course';
+import { finishReviewSession, leitner, openReviewSession, progress, recordAttempt, recordReview } from '../learn/session';
+import { describeBoxes, describeStats } from './course';
 import { describeResult } from './displayText';
 import type { KeyHandlers, Mode, ModeContext } from './types';
 import './recognize.css';
@@ -28,6 +41,10 @@ const LAST_HINT = 4;
 const REVEALING_HINT = 2;
 
 export interface RecognizeOptions {
+  /** 'lesson' = Rozpoznawanie (one chosen lesson), 'review' = Powtórki (Leitner plan). */
+  variant?: 'lesson' | 'review';
+  /** Trials in one review session. */
+  reviewSize?: number;
   /** Random source in [0, 1) for picking items (tests pass a fixed sequence). */
   random?: () => number;
   /** Blank pause between clear and show (new trial, blink). */
@@ -164,6 +181,22 @@ export function hintText(lesson: Lesson, item: LessonItem, step: number): string
   return `To jest litera ${item.spoken}. ${dots.length === 1 ? 'Punkt' : 'Punkty'} ${andList(dots)}.`;
 }
 
+/** Every item of the lessons that are not locked, as Leitner candidates, in course order. */
+export function reviewCandidates(): { available: Candidate[]; current: Candidate[] } {
+  const open = curriculum.lessons.filter((l) => progress.status(l.id) !== 'locked');
+  const toCandidates = (l: Lesson) => l.items.map((i) => ({ key: cardKey(i.key), lessonId: l.id }));
+  // Once every lesson is passed there is no "current" lesson to favour.
+  const cur = progress.current();
+  const current = progress.status(cur.id) === 'passed' ? [] : toCandidates(cur);
+  return { available: open.flatMap(toCandidates), current };
+}
+
+function findItem(c: Candidate): { lesson: Lesson; item: LessonItem } | null {
+  const lesson = lessonById(c.lessonId);
+  const item = lesson?.items.find((i) => cardKey(i.key) === c.key);
+  return lesson && item ? { lesson, item } : null;
+}
+
 // --- The mode ------------------------------------------------------------------
 
 type Phase =
@@ -188,10 +221,12 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
   const nextDelayMs = options.nextDelayMs ?? 1500;
   const buildIntroMs = options.buildIntroMs ?? 4000;
   const buildStepMs = options.buildStepMs ?? 1200;
+  const review = options.variant === 'review';
+  const reviewSize = options.reviewSize ?? DEFAULT_SESSION_SIZE;
 
   return {
-    id: 'recognize',
-    title: 'Rozpoznawanie',
+    id: review ? 'review' : 'recognize',
+    title: review ? 'Powtórki' : 'Rozpoznawanie',
 
     mount(root: HTMLElement, ctx: ModeContext): () => void {
       const { link } = ctx;
@@ -201,7 +236,12 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
       const intro = h(
         'p',
         { className: 'hint', id: 'recognize-intro' },
-        'Znak pojawia się na komórce 2. Po sygnale dotknij go i wpisz, co to za znak, potem Enter. ' +
+        (review
+          ? 'Powtórki mieszają znaki ze wszystkich odblokowanych lekcji: najpierw te, które czekają na powtórkę w pudełkach Leitnera, ' +
+            'do tego znaki bieżącej lekcji i kilka nowych. Dobra, szybka odpowiedź bez podpowiedzi przesuwa zaległy znak do wyższego pudełka, ' +
+            'a po pomyłce znak wraca do pudełka 1. Do zaliczenia lekcji liczą się tu tylko znaki bieżącej lekcji. '
+          : '') +
+          'Znak pojawia się na komórce 2. Po sygnale dotknij go i wpisz, co to za znak, potem Enter. ' +
           'Po pierwszej pomyłce spróbuj jeszcze raz, po drugiej dostaniesz podpowiedź. ' +
           'Liczy się pierwsza odpowiedź; po podpowiedzi z punktami próba nie liczy się jako poprawna (mrugnięcie nie szkodzi). ' +
           'F1 powtarza polecenie, F2 daje podpowiedź, F3 mruga znakiem. Nie ma limitu czasu.',
@@ -213,9 +253,7 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
       const setup = h(
         'div',
         { className: 'field' },
-        h('label', { htmlFor: 'recognize-lesson' }, 'Lekcja'),
-        lessonSelect,
-        lessonNote,
+        ...(review ? [lessonNote] : [h('label', { htmlFor: 'recognize-lesson' }, 'Lekcja'), lessonSelect, lessonNote]),
         h('div', { className: 'button-row' }, startBtn, stopBtn),
       );
 
@@ -224,7 +262,8 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
       const answer = h('input', { type: 'text', id: 'recognize-answer', autocomplete: 'off', spellcheck: false });
       answer.setAttribute('aria-describedby', 'recognize-status');
       answer.setAttribute('autocapitalize', 'off');
-      const status = h('p', { className: 'recognize-status', id: 'recognize-status' }, 'Wybierz lekcję i naciśnij Start.');
+      const idleText = review ? 'Naciśnij Start, aby zacząć sesję powtórek.' : 'Wybierz lekcję i naciśnij Start.';
+      const status = h('p', { className: 'recognize-status', id: 'recognize-status' }, idleText);
       const submitBtn = h('button', { type: 'submit', id: 'recognize-submit' }, 'Odpowiedz');
       const nextBtn = h('button', { type: 'button', className: 'primary', id: 'recognize-next', hidden: true }, 'Dalej');
       const repeatBtn = h('button', { type: 'button', id: 'recognize-repeat' }, 'Powtórz (F1)');
@@ -282,6 +321,11 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
 
       let sessionTotal = 0;
       let sessionCorrect = 0;
+      /** Review variant: the planned trials still to come, and card moves so far. */
+      let queue: Candidate[] = [];
+      const requeued = new Set<string>();
+      /** Review variant: the box of every card touched this session, before its first answer. */
+      let startBoxes = new Map<string, Box | null>();
 
       function later(ms: number, fn: () => void): void {
         const id = setTimeout(() => {
@@ -328,7 +372,9 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
             }),
         );
         lessonSelect.value = selected;
-        lessonNote.textContent = lesson.note;
+        // In Powtórki the note line describes the plan, not one lesson.
+        if (review) renderPlanNote();
+        else lessonNote.textContent = lesson.note;
       }
 
       function renderStats(): void {
@@ -336,7 +382,23 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
           sessionTotal === 0
             ? 'W tej sesji: brak prób.'
             : `W tej sesji: ${sessionCorrect} z ${sessionTotal} poprawnie.`;
+        if (review) {
+          const keys = reviewCandidates().available.map((c) => c.key);
+          lessonStats.textContent =
+            `Pudełka Leitnera: ${describeBoxes(keys)}. ` +
+            `Sesja powtórek nr ${leitner.session}, czeka na powtórkę: ${dueCount(leitner, keys)}.`;
+          return;
+        }
         lessonStats.textContent = `Lekcja ${lesson.id}: ${describeStats(progress.stats(lesson.id), window)}`;
+      }
+
+      function renderPlanNote(): void {
+        if (!review) return;
+        const { available } = reviewCandidates();
+        const lessons = new Set(available.map((c) => c.lessonId)).size;
+        lessonNote.textContent = available.length
+          ? `Znaki z odblokowanych lekcji (${lessons}). Sesja ma ${reviewSize} ${plural(reviewSize, 'próbę', 'próby', 'prób')}.`
+          : 'Brak znaków do powtórki.';
       }
 
       function renderDevice(): void {
@@ -389,12 +451,37 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
           );
           return;
         }
-        const chosen = lessonById(lessonSelect.value);
-        if (chosen && progress.status(chosen.id) !== 'locked') lesson = chosen;
+        let opening = '';
+        if (review) {
+          openReviewSession();
+          const { available, current } = reviewCandidates();
+          const plan = planSession({ state: leitner, available, current, size: reviewSize, random });
+          if (!plan.queue.length) {
+            say('Brak znaków do powtórki.');
+            return;
+          }
+          queue = plan.queue;
+          requeued.clear();
+          startBoxes = new Map();
+          const c = plan.counts;
+          opening =
+            `Sesja powtórek: ${queue.length} ${plural(queue.length, 'próba', 'próby', 'prób')}. ` +
+            `Zaległe: ${c.due}, z bieżącej lekcji: ${c.current}, nowe: ${c.fresh}.`;
+          renderPlanNote();
+        } else {
+          const chosen = lessonById(lessonSelect.value);
+          if (chosen && progress.status(chosen.id) !== 'locked') lesson = chosen;
+        }
         sessionTotal = 0;
         sessionCorrect = 0;
         previousKey = null;
         renderStats();
+        // Spoken now; the first prompt comes only after the device confirms,
+        // and it may cut this short — the status line keeps it visible.
+        if (opening) {
+          setStatus(opening);
+          say(opening);
+        }
         answer.focus();
         void nextTrial();
       }
@@ -406,12 +493,50 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
         item = null;
         answer.value = '';
         if (link.state === 'ready') void link.clear();
-        const summary =
+        let summary =
           sessionTotal === 0
             ? 'Koniec sesji. Nie było ocenionych prób.'
             : `Koniec sesji. Poprawnie ${sessionCorrect} z ${sessionTotal}.`;
+        if (review && sessionTotal > 0) summary += ` ${closeReviewSession()}`;
+        queue = [];
         setStatus(`${reason ? reason + ' ' : ''}${summary} Naciśnij Start, aby zacząć od nowa.`);
         say(reason ? `${reason} ${summary}` : summary);
+      }
+
+      /** Advances the Leitner session counter and describes what moved. */
+      function closeReviewSession(): string {
+        // Distinct cards, compared by where they started and where they ended.
+        let up = 0;
+        let back = 0;
+        for (const [key, from] of startBoxes) {
+          const to = leitner.cards[key]?.box;
+          if (to === undefined) continue;
+          if (to > (from ?? 1)) up++;
+          else if (to === 1 && from !== null && from > 1) back++;
+        }
+        startBoxes = new Map();
+        finishReviewSession();
+        const keys = reviewCandidates().available.map((c) => c.key);
+        const due = dueCount(leitner, keys);
+        renderStats();
+        return (
+          `Do wyższego pudełka przeszło: ${up}, do pudełka 1 wróciło: ${back}. ` +
+          `Na następną sesję czeka: ${due}.`
+        );
+      }
+
+      /** All planned trials done: close the session like "Zakończ", with its own words. */
+      function finishReview(): void {
+        const summary = sessionTotal > 0 ? `Poprawnie ${sessionCorrect} z ${sessionTotal}. ${closeReviewSession()}` : '';
+        clearTimers();
+        enter('idle');
+        item = null;
+        answer.value = '';
+        queue = [];
+        if (link.state === 'ready') void link.clear();
+        const text = `Sesja powtórek zakończona. ${summary}`.trim();
+        setStatus(`${text} Naciśnij Start, aby zacząć kolejną.`);
+        say(text);
       }
 
       /**
@@ -427,8 +552,19 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
 
       async function nextTrial(): Promise<void> {
         clearTimers();
+        if (review) {
+          const c = queue.shift();
+          const found = c ? findItem(c) : null;
+          if (!found) {
+            finishReview();
+            return;
+          }
+          lesson = found.lesson;
+          item = found.item;
+        } else {
+          item = pickItem(lesson.items, previousKey, progress.attempts(lesson.id).slice(-window), random);
+        }
         const s = enter('preparing');
-        item = pickItem(lesson.items, previousKey, progress.attempts(lesson.id).slice(-window), random);
         previousKey = item.key;
         recorded = false;
         hintStep = 0;
@@ -454,27 +590,41 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
         readyAt = ctx.now();
       }
 
-      function record(correct: boolean): RecordResult | null {
+      /**
+       * Records the FIRST answer of a trial (null for later ones). `correct`
+       * goes to the course progress; `kind` moves the Leitner card.
+       */
+      function record(correct: boolean, kind: AnswerKind): { course: RecordResult | null } | null {
         if (recorded || !item) return null;
         recorded = true;
-        const attempt: Attempt = {
-          lessonId: lesson.id,
-          itemKey: item.key,
-          correct,
-          ms: Math.max(0, Math.round(ctx.now() - readyAt)),
-          at: Date.now(),
-        };
-        let result: RecordResult | null = null;
-        try {
-          result = recordAttempt(attempt);
-        } catch {
-          // The lesson was locked meanwhile (teacher option switched off): not counted.
-          return null;
+        const ms = Math.max(0, Math.round(ctx.now() - readyAt));
+        // Powtórki count towards passing only for the current lesson's characters.
+        const countsForCourse = !review || lesson.id === progress.current().id;
+        let course: RecordResult | null = null;
+        if (countsForCourse) {
+          const attempt: Attempt = { lessonId: lesson.id, itemKey: item.key, correct, ms, at: Date.now() };
+          try {
+            course = recordAttempt(attempt);
+          } catch {
+            // The lesson was locked meanwhile (teacher option switched off): not counted at all.
+            if (!review) return null;
+          }
+        }
+        const key = cardKey(item.key);
+        if (review && !startBoxes.has(key)) startBoxes.set(key, leitner.cards[key]?.box ?? null);
+        recordReview(key, kind, ms);
+        // A missed card comes back later in the same review session (once), never back to back.
+        if (review && kind === 'wrong' && !requeued.has(item.key)) {
+          const at = requeueIndex(queue, key);
+          if (at >= 0) {
+            requeued.add(item.key);
+            queue.splice(at, 0, { key, lessonId: lesson.id });
+          }
         }
         sessionTotal++;
         if (correct) sessionCorrect++;
         renderStats();
-        return result;
+        return { course };
       }
 
       /** Text for a passed lesson; also refreshes the picker and plays the tone. */
@@ -491,7 +641,9 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
         if (result.unlocked) {
           text +=
             ` Odblokowano lekcję ${spokenLesson(result.unlocked)}.` +
-            ' Aby ją ćwiczyć, naciśnij Zakończ, wybierz lekcję z listy i Start.';
+            (review
+              ? ' Jej znaki pojawią się w następnej sesji powtórek; możesz też ćwiczyć ją w trybie Rozpoznawanie.'
+              : ' Aby ją ćwiczyć, naciśnij Zakończ, wybierz lekcję z listy i Start.');
         }
         return text;
       }
@@ -527,11 +679,12 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
 
       function onCorrect(): void {
         const withHint = hintStep >= REVEALING_HINT;
-        const result = record(!withHint);
+        // A revealing hint keeps the Leitner card where it is; a blink does not.
+        const recordedNow = record(!withHint, withHint ? 'hinted' : 'correct');
         ctx.tone('correct');
         let text = `Dobrze, to ${named(item!)}.`;
-        if (withHint && result) text += ' Ta próba była z podpowiedzią, więc nie liczy się jako poprawna.';
-        const passed = passedText(result);
+        if (withHint && recordedNow) text += ' Ta próba była z podpowiedzią, więc nie liczy się jako poprawna.';
+        const passed = passedText(recordedNow?.course ?? null);
         text += passed;
         // Longer feedback waits for "Dalej", so the next prompt cannot cut it off.
         if (lastWrong || passed || withHint) {
@@ -545,7 +698,7 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
 
       function onWrong(chosen: ParsedAnswer): void {
         wrongCount++;
-        const passed = passedText(record(false));
+        const passed = passedText(record(false, 'wrong')?.course ?? null);
         lastWrong = chosen;
         ctx.tone('wrong');
         const no = `Nie, to nie ${named(chosen)}.`;
@@ -605,7 +758,7 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
       async function reveal(prefix: string, justAnswered: boolean): Promise<void> {
         const s = enter('revealing');
         const it = item!;
-        const passed = passedText(record(false));
+        const passed = passedText(record(false, 'wrong')?.course ?? null);
         const answerText = hintText(lesson, it, LAST_HINT);
         const dots = maskToDots(it.mask);
         // A single dot has nothing to build.
@@ -673,7 +826,7 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
       /** F1: say the current message again; put the character back first if the display lost it. */
       async function repeat(): Promise<void> {
         if (phase === 'idle') {
-          say(`Wybierz lekcję i naciśnij Start. Wybrana lekcja: ${lessonSelect.value}.`);
+          say(review ? idleText : `${idleText} Wybrana lekcja: ${lessonSelect.value}.`);
           return;
         }
         if (phase === 'preparing') {
@@ -772,6 +925,7 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
       ctx.setKeys(keys);
 
       renderLessons();
+      renderPlanNote();
       renderStats();
       renderDevice();
       renderControls();
@@ -798,3 +952,4 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
 }
 
 export const recognizeMode: Mode = createRecognizeMode();
+export const reviewMode: Mode = createRecognizeMode({ variant: 'review' });

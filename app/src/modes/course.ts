@@ -6,7 +6,8 @@
 import { cellsToBraille } from '../braille/translator';
 import { curriculum, type Lesson, type LessonItem } from '../learn/curriculum';
 import type { LessonStats, LessonStatus } from '../learn/progress';
-import { persist, progress } from '../learn/session';
+import { BOXES, boxCounts, cardKey, dueCount } from '../learn/leitner';
+import { leitner, persist, progress, resetAll } from '../learn/session';
 import { describeResult } from './displayText';
 import type { Mode, ModeContext } from './types';
 
@@ -34,6 +35,26 @@ export function describeStats(s: LessonStats, window: number): string {
   const base = `Wynik z ostatnich prób (${s.attempts}): poprawnie ${s.correct}, czyli ${pct}%.`;
   // "brakuje" takes the genitive: 1 próby, 2+ prób.
   return s.missing > 0 ? `${base} Do oceny brakuje jeszcze ${s.missing} ${s.missing === 1 ? 'próby' : 'prób'}.` : base;
+}
+
+/** "w pudełku 1: 3, w pudełku 2: 1, opanowane: 2" for the cards among `keys`. */
+export function describeBoxes(keys: readonly string[]): string {
+  const counts = boxCounts(leitner, keys);
+  const parts = BOXES.filter((b) => counts[b].length).map((b) =>
+    b === 5 ? `opanowane: ${counts[b].length}` : `w pudełku ${b}: ${counts[b].length}`,
+  );
+  return parts.length ? parts.join(', ') : 'jeszcze żaden znak nie był ćwiczony';
+}
+
+/** Per lesson: which characters sit in which box ("opanowane: a, b; pudełko 1: d"). */
+export function describeLessonBoxes(lesson: Lesson): string {
+  // Dots are named ("punkt 3"): bare numbers would sound like counts.
+  const keyOf = new Map(lesson.items.map((i) => [cardKey(i.key), lesson.kind === 'dots' ? i.spoken : i.key]));
+  const counts = boxCounts(leitner, [...keyOf.keys()]);
+  const parts = BOXES.filter((b) => counts[b].length).map(
+    (b) => `${b === 5 ? 'opanowane' : `pudełko ${b}`}: ${counts[b].map((k) => keyOf.get(k)).join(', ')}`,
+  );
+  return parts.length ? `Powtórki — ${parts.join('; ')}.` : 'Powtórki — jeszcze bez ćwiczeń.';
 }
 
 function chunk(items: readonly LessonItem[], size: number): LessonItem[][] {
@@ -68,13 +89,14 @@ export const courseMode: Mode = {
       { className: 'hint', id: 'course-rule' },
       `Każda lekcja to 5 znaków — cały rząd urządzenia. Następna lekcja odblokowuje się, gdy w ostatnich ${window} próbach ` +
         `bieżącej masz co najmniej ${Math.round(minAccuracy * 100)}% poprawnych odpowiedzi. ` +
-        'Próby zapisuje ćwiczenie Rozpoznawanie.',
+        'Próby zapisują ćwiczenia Rozpoznawanie i Powtórki (w Powtórkach tylko znaki bieżącej lekcji).',
     );
     const current = h('p', { className: 'course-current', id: 'course-current' });
+    const reviewLine = h('p', { id: 'course-review' });
     const list = h('ol', { className: 'lesson-list', id: 'lesson-list' });
 
     const teacherBox = h('input', { type: 'checkbox', id: 'teacher-unlock' });
-    const resetBtn = h('button', { type: 'button', id: 'course-reset' }, 'Wyzeruj postępy');
+    const resetBtn = h('button', { type: 'button', id: 'course-reset' }, 'Wyzeruj postępy i powtórki');
     const teacher = h(
       'details',
       { className: 'teacher-options' },
@@ -89,6 +111,12 @@ export const courseMode: Mode = {
     function render(focusLesson?: string): void {
       const cur = progress.current();
       current.textContent = `Bieżąca lekcja: ${cur.id} — ${cur.title}.`;
+      const openKeys = curriculum.lessons
+        .filter((l) => progress.status(l.id) !== 'locked')
+        .flatMap((l) => l.items.map((i) => cardKey(i.key)));
+      reviewLine.textContent =
+        `Powtórki (sesja nr ${leitner.session}): ${describeBoxes(openKeys)}. ` +
+        `Na najbliższą sesję czeka: ${dueCount(leitner, openKeys)}.`;
       teacherBox.checked = progress.teacherUnlocked;
       list.replaceChildren(
         ...curriculum.lessons.map((lesson) => {
@@ -120,6 +148,7 @@ export const courseMode: Mode = {
             ),
             h('p', { className: 'hint' }, lesson.note),
             h('p', { className: 'lesson-stats' }, status === 'locked' ? 'Zalicz poprzednią lekcję, aby odblokować.' : describeStats(stats, window)),
+            ...(status === 'locked' ? [] : [h('p', { className: 'lesson-boxes' }, describeLessonBoxes(lesson))]),
             h('div', { className: 'button-row' }, show),
           );
           if (lesson.id === cur.id && status !== 'passed') li.setAttribute('aria-current', 'step');
@@ -148,7 +177,7 @@ export const courseMode: Mode = {
     let resetTimer: ReturnType<typeof setTimeout> | undefined;
     function disarmReset(): void {
       resetArmed = false;
-      resetBtn.textContent = 'Wyzeruj postępy';
+      resetBtn.textContent = 'Wyzeruj postępy i powtórki';
       clearTimeout(resetTimer);
     }
 
@@ -163,21 +192,20 @@ export const courseMode: Mode = {
       if (!resetArmed) {
         resetArmed = true;
         resetBtn.textContent = 'Na pewno? Naciśnij ponownie, aby wyzerować';
-        ctx.announce('Naciśnij ponownie w ciągu 5 sekund, aby wyzerować wszystkie postępy.');
+        ctx.announce('Naciśnij ponownie w ciągu 5 sekund, aby wyzerować wszystkie postępy i pudełka powtórek.');
         resetTimer = setTimeout(disarmReset, 5000);
         return;
       }
       disarmReset();
-      progress.reset();
-      persist();
+      resetAll();
       pages.clear();
       render();
-      ctx.announce('Postępy wyzerowane. Zaczynasz od lekcji L0.');
+      ctx.announce('Postępy i powtórki wyzerowane. Zaczynasz od lekcji L0.');
     };
     teacherBox.addEventListener('change', onTeacher);
     resetBtn.addEventListener('click', onReset);
 
-    root.append(intro, current, list, teacher);
+    root.append(intro, current, reviewLine, list, teacher);
     render();
 
     return () => {

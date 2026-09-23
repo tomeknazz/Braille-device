@@ -2,8 +2,8 @@
 //
 // Rules implemented (docs/PROPOZYCJA.md §5, docs/DYDAKTYKA.md §1):
 //  - input is NFC-normalised, so "z" + combining dot above becomes "ż";
-//  - letters are lower-cased; the capital sign is optional and OFF by default
-//    because it is not yet verified against the PZN tables;
+//  - letters are lower-cased; the capital sign (dots 4-6) is optional and OFF
+//    by default, since beginners meet it only in the last lesson (L8);
 //  - a run of digits gets ONE number sign, then each digit uses the a-j cell;
 //  - any run of whitespace becomes a single blank cell (leading/trailing trimmed);
 //  - characters with no table entry are reported in `unknown`, never silently
@@ -41,7 +41,7 @@ export interface UnknownChar {
 }
 
 export interface TranslateOptions {
-  /** Insert the (unverified) capital sign before upper-case letters. Default false. */
+  /** Insert the capital sign (dots 4-6) before upper-case letters. Default false. */
   capitalSign?: boolean;
 }
 

@@ -263,8 +263,8 @@
       "name": "znak wielkiej litery",
       "dots": [4,6],
       "mask": 40,
-      "verified": false,
-      "note": "SPRAWDZIĆ z normą PZN (46 czy 6). Podwójny znak = cały wyraz wielkimi literami."
+      "verified": true,
+      "note": "Punkty 4-6 (potwierdzone przez autora). Podwójny znak = cały wyraz wielkimi literami."
     }
   ],
   "digits": [

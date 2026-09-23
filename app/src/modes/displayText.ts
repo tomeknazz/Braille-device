@@ -74,7 +74,7 @@ export const displayTextMode: Mode = {
       h(
         'div',
         { className: 'field' },
-        h('label', { className: 'checkbox' }, capital, 'Dodawaj znak wielkiej litery (jeszcze niezweryfikowany z normą PZN)'),
+        h('label', { className: 'checkbox' }, capital, 'Dodawaj znak wielkiej litery (punkty 4-6)'),
       ),
       h('div', { className: 'button-row' }, submit, clearBtn),
     );

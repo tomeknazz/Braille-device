@@ -40,7 +40,8 @@ describe('translate', () => {
     expect(translate('KOT', { capitalSign: true }).cells).toEqual([40, 40, 5, 21, 30]);
     expect(translate('A', { capitalSign: true }).cells).toEqual([40, 1]);
     const t = translate('Ala', { capitalSign: true });
-    expect(t.warnings.some((w) => w.includes('wielkiej litery'))).toBe(true);
+    // Dots 4-6 are confirmed, so the capital sign no longer raises a warning.
+    expect(t.warnings.some((w) => w.includes('wielkiej litery'))).toBe(false);
   });
 
   it('handles Polish upper-case diacritics', () => {

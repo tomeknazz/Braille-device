@@ -65,7 +65,7 @@ Pewność: wysoka. Są to standardowe przypisania polskiego brajla i wszystkie m
 |---|---|---|---|
 | Znak liczby ⠼ | 3456 | 3C | wysoka |
 | Cyfry 1–9, 0 | ⠼ + a…j (1=a, 2=b … 9=i, 0=j) | — | wysoka |
-| Znak wielkiej litery ⠨ | 46 | 28 | ⚠ wysoka, ale sprawdzić: w konwencji polskiej/niemieckiej to 46, **nie** punkt 6 jak w angielskim brajlu. Podwójny ⠨⠨ oznacza słowo pisane wielkimi literami. |
+| Znak wielkiej litery ⠨ | 46 | 28 | **potwierdzone przez autora**: w konwencji polskiej to 46, **nie** punkt 6 jak w angielskim brajlu. Podwójny ⠨⠨ oznacza słowo pisane wielkimi literami. |
 | kropka . ⠄ | 3 | 04 | średnia, sprawdzić |
 | przecinek , ⠂ | 2 | 02 | średnia, sprawdzić |
 | średnik ; ⠆ | 23 | 06 | średnia, sprawdzić |

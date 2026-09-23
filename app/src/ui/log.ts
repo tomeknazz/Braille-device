@@ -2,6 +2,7 @@
 // a single-line console to send any protocol command once the link is ready.
 
 import type { DeviceLink, LogEntry } from '../device/DeviceLink';
+import { renderCommandReference } from './commandReference';
 
 const MAX_ENTRIES = 500;
 
@@ -67,7 +68,12 @@ export class ProtocolLog {
       void navigator.clipboard?.writeText(this.entries.join('\n')).catch(() => undefined);
     });
 
-    root.append(form, this.list);
+    const reference = renderCommandReference((example) => {
+      input.value = example;
+      input.focus();
+    });
+
+    root.append(reference, form, this.list);
     link.on('line', (e) => this.add(e));
   }
 

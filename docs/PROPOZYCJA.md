@@ -190,7 +190,7 @@ Uwaga: w propozycji USB ż miało punkty 1-2-3-4-5-6, czyli pełną komórkę, c
 | Znak | Punkty | Maska | Pewność |
 |---|---|---|---|
 | znak liczby ⠼ | 3456 | 60 | wysoka. Cyfry: znak liczby + a…j (1 = a … 0 = j), np. 2026 to `show,60,3,26,3,11` (5 komórek) |
-| znak wielkiej litery ⠨ | 46 | 40 | **SPRAWDZIĆ z normą PZN.** Sędziowie nie zgadzają się, co podają źródła (46 czy 6). Podwójny znak = cały wyraz wielkimi literami. |
+| znak wielkiej litery ⠨ | 46 | 40 | **potwierdzone przez autora** (punkty 4 i 6, nie sam punkt 6 jak w brajlu angielskim). Podwójny znak = cały wyraz wielkimi literami. |
 | kropka / przecinek | 3 / 2 | 4 / 2 | średnia, sprawdzić |
 | ; / : | 23 / 25 | 6 / 18 | średnia, sprawdzić |
 | ? / ! | 26 / 235 | 34 / 22 | średnia, sprawdzić |
@@ -228,7 +228,7 @@ Pisanie pracy równolegle od tygodnia 6.
 | Dźwięk serw zdradza odpowiedź (liczba kliknięć ≈ liczba punktów) | Stały wzór `clear` → `show`, TTS albo szum w trakcie ruchu. Opisać i zmierzyć jako ograniczenie. |
 | Web Serial działa tylko w Chrome/Edge na komputerze. Na Windows może być potrzebny sterownik CP210x/CH340. | Ustalony laptop na obronę. Sterownik w instrukcji. Etap 3 z Wi-Fi jako droga na telefony. |
 | Głos TTS przez sieć milknie bez internetu | Lokalny głos „Paulina” i nagrane MP3 nazw liter |
-| Błędy w tabeli polskiego brajla | JSON ze źródłem, test dla każdego znaku, konsultacja z tyflopedagogiem. Znak wielkiej litery i interpunkcja jako „do weryfikacji”. |
+| Błędy w tabeli polskiego brajla | JSON ze źródłem, test dla każdego znaku, konsultacja z tyflopedagogiem. Interpunkcja jako „do weryfikacji” (znak wielkiej litery potwierdzony: 46). |
 | Za szeroki zakres na jeden semestr | Stałe cięcie MVP (pkt 4). Tryby „Should” dopiero od tygodnia 8. |
 | Mała próba badawcza, trudny dostęp do osób niewidomych | Kontakt z PZN lub ośrodkiem od tygodnia 3. Minimum: osoby widzące z zasłoniętymi oczami plus przegląd ekspercki. Ograniczenia opisane w pracy. |
 | Build nie jest odtwarzalny (`*.ini` w `.gitignore`, brak pliku) | `!platformio.ini`, przypięte wersje, commit |
@@ -274,6 +274,6 @@ Etyka: świadoma zgoda, pseudonimy w logach. Sprawdzić, czy uczelnia wymaga opi
 1. **Drugi transport (etap 3).** Domyślnie żaden, dopóki etapy 1–2 nie są gotowe. Potem Wi-Fi w trybie AP z WebSocketem, a nie BLE: daje telefony i iOS/VoiceOver przy tym samym kodzie JS i bez aplikacji do instalowania.
 2. **Wejście sprzętowe.** Domyślnie `EVT key` jest zarezerwowane w protokole teraz. Jeśli w tygodniu 8 zostanie czas, dojdą 3 przyciski GPIO z `INPUT_PULLUP` (Dalej / Powtórz / Nie wiem). Klawiatura Perkinsa na urządzeniu to kierunek dalszego rozwoju.
 3. **Kalibracja bez rekompilacji (`cal/save` w NVS).** Domyślnie tak, w tygodniu 8. Wcześniej wystarczy `dump` i eksport wierszy C++.
-4. **Zakres znaków w MVP.** Domyślnie a–z, polskie diakrytyki, znak liczby i cyfry. Znak wielkiej litery i interpunkcja wchodzą dopiero po sprawdzeniu z normą PZN. Kolejność kursu: dekadowa. Algorytm powtórek: Leitner, nie SM-2 ani FSRS.
+4. **Zakres znaków w MVP.** Domyślnie a–z, polskie diakrytyki, znak liczby i cyfry. Znak wielkiej litery (46, potwierdzony) wchodzi w L8; interpunkcja dopiero po sprawdzeniu z normą PZN. Kolejność kursu: dekadowa. Algorytm powtórek: Leitner, nie SM-2 ani FSRS.
 
 Pliki: przeanalizowałem `C:\Users\Admin\PycharmProjects\Braille-device\src\main.cpp` (bez zmian). `C:\Users\Admin\PycharmProjects\Braille-device\platformio.ini` nie istnieje w katalogu roboczym i trzeba go odtworzyć.

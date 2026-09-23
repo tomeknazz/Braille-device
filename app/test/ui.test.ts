@@ -93,6 +93,17 @@ describe('app shell (simulator)', () => {
 
   it('announces translation warnings together with the result', async () => {
     const input = document.getElementById('text-input') as HTMLInputElement;
+    input.value = 'ala.';
+    input.dispatchEvent(new Event('input'));
+    input.form!.requestSubmit();
+    await vi.advanceTimersByTimeAsync(1500);
+    const said = $('announcer').textContent ?? '';
+    expect(said).toMatch(/^Gotowe: /);
+    expect(said).toContain('Uwaga: Znaki interpunkcyjne');
+  });
+
+  it('adds the verified capital sign without a warning', async () => {
+    const input = document.getElementById('text-input') as HTMLInputElement;
     const capital = document.getElementById('capital-sign') as HTMLInputElement;
     capital.checked = true;
     capital.dispatchEvent(new Event('change'));
@@ -102,7 +113,7 @@ describe('app shell (simulator)', () => {
     await vi.advanceTimersByTimeAsync(1500);
     const said = $('announcer').textContent ?? '';
     expect(said).toMatch(/^Gotowe: /);
-    expect(said).toContain('Uwaga: Znak wielkiej litery');
+    expect(said).not.toContain('Uwaga');
     capital.checked = false;
     capital.dispatchEvent(new Event('change'));
   });

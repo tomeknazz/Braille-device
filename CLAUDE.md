@@ -151,7 +151,7 @@ potem wysuwanie), ruszane są tylko punkty, które się zmieniają.
   kolejność w wierszu to punkty 1,2,3,4,5,6. Używany tylko przez komendy testowe
   (`<litera>`, `text`) — aplikacja korzysta z `app/src/braille/pl-braille.json`.
 - Polski brajl: ą 16, ć 146, ę 156, ł 126, ń 1456, ó 346, ś 246, ź 2346, ż 12346,
-  znak liczby 3456. Znak wielkiej litery i interpunkcja mają `"verified": false`
-  — do sprawdzenia z normą PZN.
+  znak liczby 3456, znak wielkiej litery 46 (potwierdzone przez autora; podwójny = cały
+  wyraz wielkimi). Interpunkcja ma `"verified": false` — do sprawdzenia z normą PZN.
 - `CASCADE_DELAY_MS` (20 ms) między punktami — efekt kaskady, ogranicza też
   szczytowy pobór prądu przy ruchu serw.

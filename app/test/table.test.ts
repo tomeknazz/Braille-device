@@ -47,11 +47,11 @@ describe('pl-braille.json', () => {
     for (const [ch, mask] of Object.entries(expected)) expect(letterByChar.get(ch)?.mask).toBe(mask);
   });
 
-  it('signs: number sign 3456 = 60 (verified), capital sign 46 = 40 (unverified)', () => {
+  it('signs: number sign 3456 = 60 (verified), capital sign 46 = 40 (verified)', () => {
     expect(NUMBER_SIGN.mask).toBe(60);
     expect(NUMBER_SIGN.verified).toBe(true);
     expect(CAPITAL_SIGN.mask).toBe(40);
-    expect(CAPITAL_SIGN.verified).toBe(false);
+    expect(CAPITAL_SIGN.verified).toBe(true);
   });
 
   it('signs and punctuation do not collide with letters or with each other', () => {

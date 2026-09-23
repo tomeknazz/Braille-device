@@ -272,6 +272,62 @@ input[type='text'] {
   margin: 0.5rem 0 0;
 }
 
+/* --- Command reference -------------------------------------------------- */
+
+.command-reference {
+  margin: 0.5rem 0 1rem;
+}
+.command-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+}
+.command-table caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.25rem 0;
+}
+.command-table th,
+.command-table td {
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.command-table tbody th {
+  font-weight: normal;
+  white-space: nowrap;
+}
+.command-table code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+.moves-tag {
+  color: var(--muted);
+  font-style: italic;
+}
+.insert-example {
+  white-space: nowrap;
+}
+@media (max-width: 40rem) {
+  .command-table thead {
+    display: none;
+  }
+  .command-table tr,
+  .command-table th,
+  .command-table td {
+    display: block;
+    border: none;
+  }
+  .command-table tr {
+    border: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+  }
+  .command-table tbody th {
+    white-space: normal;
+  }
+}
+
 /* --- Protocol log -------------------------------------------------------- */
 
 details summary {

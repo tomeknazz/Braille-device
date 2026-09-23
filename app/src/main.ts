@@ -1,13 +1,18 @@
 // App shell: wires DeviceLink to the connection panel, preview, log and modes.
 
 import './styles.css';
+import { WebSpeechSpeaker } from './audio/speech';
+import { WebAudioTones } from './audio/tones';
 import { DeviceLink } from './device/DeviceLink';
 import { modes, plannedModes } from './modes/registry';
-import type { Mode, ModeContext } from './modes/types';
+import type { KeyHandlers, Mode, ModeContext } from './modes/types';
+import { SettingsStore } from './settings';
 import { Announcer } from './ui/announcer';
 import { ConnectionPanel } from './ui/connection';
+import { Feedback } from './ui/feedback';
 import { ProtocolLog } from './ui/log';
 import { DevicePreview } from './ui/preview';
+import { SettingsPanel } from './ui/settingsPanel';
 
 function byId<T extends HTMLElement = HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -17,6 +22,9 @@ function byId<T extends HTMLElement = HTMLElement>(id: string): T {
 
 const link = new DeviceLink();
 const announcer = new Announcer(byId('announcer'));
+const settings = new SettingsStore();
+const feedback = new Feedback(announcer, new WebSpeechSpeaker(), new WebAudioTones(), settings);
+new SettingsPanel(byId('settings-root'), settings, feedback);
 
 new ConnectionPanel(link, {
   usb: byId<HTMLButtonElement>('btn-connect-usb'),
@@ -34,7 +42,17 @@ new ProtocolLog(byId('log-root'), link);
 
 // --- Modes ---------------------------------------------------------------
 
-const ctx: ModeContext = { link, announce: (m) => announcer.announce(m) };
+let keys: KeyHandlers | null = null;
+const ctx: ModeContext = {
+  link,
+  announce: (m) => feedback.say(m),
+  say: (m) => feedback.say(m),
+  tone: (k) => feedback.tone(k),
+  setKeys: (h) => {
+    keys = h;
+  },
+  now: () => performance.now(),
+};
 const modeRoot = byId('mode-root');
 const modeNav = byId('mode-nav');
 let unmount: (() => void) | null = null;
@@ -42,6 +60,7 @@ const modeButtons = new Map<string, HTMLButtonElement>();
 
 function activate(mode: Mode): void {
   unmount?.();
+  keys = null;
   modeRoot.replaceChildren();
   const heading = document.createElement('h3');
   heading.textContent = mode.title;
@@ -74,3 +93,30 @@ if (plannedModes.length) {
 }
 const first = modes[0];
 if (first) activate(first);
+
+// --- Global shortcuts ------------------------------------------------------
+// F1 repeat, F2 hint, F3 blink (handled by the active mode); Esc returns to
+// the mode menu. Browser defaults (help, find) are suppressed only when the
+// mode actually handles the key.
+
+const F_KEYS: Record<string, keyof KeyHandlers> = { F1: 'repeat', F2: 'hint', F3: 'blink' };
+
+document.addEventListener('keydown', (e) => {
+  if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  const action = F_KEYS[e.key];
+  if (action) {
+    const fn = keys?.[action];
+    if (fn) {
+      e.preventDefault();
+      fn();
+    }
+    return;
+  }
+  if (e.key === 'Escape') {
+    const current = [...modeButtons.values()].find((b) => b.getAttribute('aria-pressed') === 'true');
+    if (current && document.activeElement !== current) {
+      e.preventDefault();
+      current.focus();
+    }
+  }
+});

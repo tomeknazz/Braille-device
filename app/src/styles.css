@@ -272,6 +272,53 @@ input[type='text'] {
   margin: 0.5rem 0 0;
 }
 
+/* --- Course ------------------------------------------------------------- */
+
+.course-current {
+  font-weight: 600;
+}
+.lesson-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+.lesson {
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+.lesson h4 {
+  margin: 0.25rem 0 0.5rem;
+}
+.lesson p {
+  margin: 0 0 0.5rem;
+}
+.lesson[aria-current='step'] {
+  border-width: 3px;
+  border-color: var(--fg);
+}
+.lesson-locked {
+  border-style: dashed;
+}
+.lesson-locked h4,
+.lesson-locked .lesson-items {
+  color: var(--muted);
+}
+.lesson-status {
+  font-weight: normal;
+}
+.lesson-passed .lesson-status::before {
+  content: '✓ ';
+}
+.lesson-items .braille-text {
+  margin-right: 0.5rem;
+}
+.teacher-options {
+  margin-top: 0.5rem;
+}
+
 /* --- Command reference -------------------------------------------------- */
 
 .command-reference {

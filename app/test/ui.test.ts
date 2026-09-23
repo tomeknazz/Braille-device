@@ -46,6 +46,62 @@ describe('app shell (simulator)', () => {
     expect($('btn-disconnect').hidden).toBe(false);
   });
 
+  it('opens the course first, with only L0 available', () => {
+    expect(document.querySelector('#mode-root h3')?.textContent).toBe('Kurs');
+    const lessons = [...document.querySelectorAll('#lesson-list > li')];
+    expect(lessons).toHaveLength(8);
+    expect(lessons.map((li) => li.querySelector('.lesson-status')?.textContent)).toEqual([
+      '(dostępna)', '(zablokowana)', '(zablokowana)', '(zablokowana)',
+      '(zablokowana)', '(zablokowana)', '(zablokowana)', '(zablokowana)',
+    ]);
+    expect(lessons[0]!.getAttribute('aria-current')).toBe('step');
+    expect($('course-current').textContent).toBe('Bieżąca lekcja: L0 — Orientacja: punkty 1–6.');
+    expect(lessons[1]!.querySelector('button')!.disabled).toBe(true);
+    expect(lessons[1]!.querySelector('.lesson-items')?.textContent).toContain('Znaki: a, b, c, d, e');
+  });
+
+  it('shows L0 on the device in two pages and keeps focus on the button', async () => {
+    const button = () => document.querySelector<HTMLButtonElement>('button[data-lesson="L0"]')!;
+    expect(button().textContent).toBe('Pokaż na urządzeniu (1/2)');
+    button().focus();
+    button().click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(captionTexts()).toEqual([
+      '⠁ Komórka 1: punkt 1 (a)',
+      '⠂ Komórka 2: punkt 2 (przecinek)',
+      '⠄ Komórka 3: punkt 3 (kropka)',
+      '⠈ Komórka 4: punkt 4 (bez znaczenia w tabeli)',
+      '⠐ Komórka 5: punkt 5 (bez znaczenia w tabeli)',
+    ]);
+    expect($('announcer').textContent).toMatch(/^Gotowe: punkt 1, punkt 2, punkt 3, punkt 4, punkt 5 na kolejnych komórkach/);
+    expect(button().textContent).toBe('Pokaż na urządzeniu (2/2)');
+    expect(document.activeElement).toBe(button());
+
+    button().click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(captionTexts()[0]).toMatch(/^⠠ Komórka 1: punkt 6/);
+    expect(captionTexts()[1]).toBe('⠀ Komórka 2: pusta');
+  });
+
+  it('teacher option unlocks every lesson and restores the rules when switched off', async () => {
+    const box = $('teacher-unlock') as HTMLInputElement;
+    box.checked = true;
+    box.dispatchEvent(new Event('change'));
+    expect(document.querySelectorAll('.lesson-locked')).toHaveLength(0);
+    expect(document.querySelector<HTMLButtonElement>('button[data-lesson="L7"]')!.disabled).toBe(false);
+    box.checked = false;
+    box.dispatchEvent(new Event('change'));
+    expect(document.querySelectorAll('.lesson-locked')).toHaveLength(7);
+    await vi.advanceTimersByTimeAsync(100);
+  });
+
+  it('switches to the text mode', () => {
+    const btn = [...document.querySelectorAll<HTMLButtonElement>('#mode-nav button')].find((b) => b.textContent === 'Wyświetl tekst')!;
+    btn.click();
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    expect(document.getElementById('text-input')).not.toBeNull();
+  });
+
   it('translates, pages and shows the confirmed state in the preview', async () => {
     const input = document.getElementById('text-input') as HTMLInputElement;
     expect(document.querySelector('label[for="text-input"]')?.textContent).toBe('Tekst do wyświetlenia');

@@ -39,7 +39,12 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
   (`MockDevice`).
 - Struktura: `src/braille/` (tabela `pl-braille.json` + translator + paginacja po 5
   komórek), `src/device/` (protokół, `DeviceLink`, `WebSerialDevice`, `MockDevice`),
-  `src/ui/`.
+  `src/learn/` (kurs, postępy), `src/modes/` (tryby: Kurs, Wyświetl tekst), `src/ui/`.
+- **Kurs:** `src/learn/curriculum.json` — lekcje L0 (punkty 1–6) i L1–L7 (po 5 liter,
+  kolejność dekadowa). Reguły dekad (`rule`: L3 = L1 + punkt 3 itd.) są sprawdzane przy
+  ładowaniu. Odblokowanie: ≥ 80% poprawnych w ostatnich 20 próbach (`unlock` w JSON;
+  opcjonalny limit mediany czasu). Zaliczenie jest trwałe. Postępy w `localStorage`
+  (`braillelab.progress.v1`); próby zapisuje `recordAttempt()` z `src/learn/session.ts`.
 
 ## Sprzęt
 

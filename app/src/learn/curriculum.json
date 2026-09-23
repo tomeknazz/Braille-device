@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "description": "Kurs dekadowy: po 5 znaków na lekcję (= 5 komórek urządzenia). Kolejność i treść to dane — tyflopedagog może je zmienić bez zmian w kodzie. Źródło: docs/DYDAKTYKA.md §2.1.",
+  "unlock": {
+    "window": 20,
+    "minAccuracy": 0.8,
+    "maxMedianMs": null
+  },
+  "lessons": [
+    {
+      "id": "L0",
+      "title": "Orientacja: punkty 1–6",
+      "kind": "dots",
+      "items": ["1", "2", "3", "4", "5", "6"],
+      "note": "Który punkt jest wysunięty? Lewa kolumna od góry: 1, 2, 3; prawa: 4, 5, 6. Bez tej numeracji reszta kursu nie działa."
+    },
+    {
+      "id": "L1",
+      "title": "Litery a–e",
+      "kind": "letters",
+      "items": ["a", "b", "c", "d", "e"],
+      "note": "Tylko górne cztery punkty: 1, 2, 4, 5."
+    },
+    {
+      "id": "L2",
+      "title": "Litery f–j",
+      "kind": "letters",
+      "items": ["f", "g", "h", "i", "j"],
+      "note": "Uwaga na pary lustrzane: d/f, e/i, h/j."
+    },
+    {
+      "id": "L3",
+      "title": "Litery k–o",
+      "kind": "letters",
+      "items": ["k", "l", "m", "n", "o"],
+      "note": "Reguła „+3”: k–o to a–e z dodanym punktem 3.",
+      "rule": { "from": "L1", "addDots": [3] }
+    },
+    {
+      "id": "L4",
+      "title": "Litery p–t",
+      "kind": "letters",
+      "items": ["p", "q", "r", "s", "t"],
+      "note": "Reguła „+3”: p–t to f–j z dodanym punktem 3. Litera q występuje w polskim tylko w słowach obcych.",
+      "rule": { "from": "L2", "addDots": [3] }
+    },
+    {
+      "id": "L5",
+      "title": "Litery u, v, x, y, z",
+      "kind": "letters",
+      "items": ["u", "v", "x", "y", "z"],
+      "note": "Reguła „+3 i 6”: u v x y z to a–e z dodanymi punktami 3 i 6.",
+      "rule": { "from": "L1", "addDots": [3, 6] }
+    },
+    {
+      "id": "L6",
+      "title": "Litery w, ą, ć, ę, ł",
+      "kind": "letters",
+      "items": ["w", "ą", "ć", "ę", "ł"],
+      "note": "w to wyjątek od reguł. ą, ć, ę to a, c, e z punktem 6 („ogonek”); ł to b z punktem 6."
+    },
+    {
+      "id": "L7",
+      "title": "Litery ń, ó, ś, ź, ż",
+      "kind": "letters",
+      "items": ["ń", "ó", "ś", "ź", "ż"],
+      "note": "Bez prostych skojarzeń — te znaki trzeba po prostu wyćwiczyć."
+    }
+  ]
+}

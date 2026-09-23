@@ -1,8 +1,9 @@
+import { courseMode } from './course';
 import { displayTextMode } from './displayText';
 import type { Mode, PlannedMode } from './types';
 
 /** Modes available in the switcher, in display order. */
-export const modes: Mode[] = [displayTextMode];
+export const modes: Mode[] = [courseMode, displayTextMode];
 
 /** Next steps (docs/PROPOZYCJA.md §4, docs/DYDAKTYKA.md §4). */
 export const plannedModes: PlannedMode[] = [

@@ -1,5 +1,5 @@
 // The learner's course progress for this browser, shared by every mode that
-// shows or records it (Kurs now, Rozpoznawanie next).
+// shows or records it (Kurs reads it, Rozpoznawanie records attempts).
 
 import { curriculum } from './curriculum';
 import type { Attempt, RecordResult } from './progress';

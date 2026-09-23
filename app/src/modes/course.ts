@@ -31,8 +31,9 @@ const STATUS_TEXT: Record<LessonStatus, string> = {
 export function describeStats(s: LessonStats, window: number): string {
   if (s.attempts === 0) return `Brak prób. Do zaliczenia potrzeba ${window} prób.`;
   const pct = Math.round((s.accuracy ?? 0) * 100);
-  const base = `Ostatnie ${s.attempts} ${s.attempts === 1 ? 'próba' : 'prób'}: ${s.correct} poprawnych (${pct}%).`;
-  return s.missing > 0 ? `${base} Brakuje jeszcze ${s.missing} prób do oceny.` : base;
+  const base = `Wynik z ostatnich prób (${s.attempts}): poprawnie ${s.correct}, czyli ${pct}%.`;
+  // "brakuje" takes the genitive: 1 próby, 2+ prób.
+  return s.missing > 0 ? `${base} Do oceny brakuje jeszcze ${s.missing} ${s.missing === 1 ? 'próby' : 'prób'}.` : base;
 }
 
 function chunk(items: readonly LessonItem[], size: number): LessonItem[][] {
@@ -67,7 +68,7 @@ export const courseMode: Mode = {
       { className: 'hint', id: 'course-rule' },
       `Każda lekcja to 5 znaków — cały rząd urządzenia. Następna lekcja odblokowuje się, gdy w ostatnich ${window} próbach ` +
         `bieżącej masz co najmniej ${Math.round(minAccuracy * 100)}% poprawnych odpowiedzi. ` +
-        'Próby zapisuje ćwiczenie Rozpoznawanie (w przygotowaniu).',
+        'Próby zapisuje ćwiczenie Rozpoznawanie.',
     );
     const current = h('p', { className: 'course-current', id: 'course-current' });
     const list = h('ol', { className: 'lesson-list', id: 'lesson-list' });

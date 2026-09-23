@@ -164,6 +164,111 @@ export function paginate(cells: readonly number[], size: number = CELLS_PER_PAGE
   return pages;
 }
 
+/** Label of the blank cell that ends a page when a word goes on on the next one. */
+export const CONTINUATION_LABEL = 'ciąg dalszy';
+
+/** One page of the device: the cells plus one human-readable label per cell. */
+export interface BraillePage {
+  cells: number[];
+  /** Same length as `cells`: "k", "znak liczby", "spacja", "ciąg dalszy"… */
+  labels: string[];
+  /** The page ends with the continuation blank: its last word goes on on the next page. */
+  continued: boolean;
+}
+
+interface LabelledCell {
+  mask: number;
+  label: string;
+  kind: SegmentKind;
+}
+
+/** Splits segments into tokens: maximal runs without a space (a word, a number, "kot,"). */
+function tokens(segments: readonly Segment[]): LabelledCell[][] {
+  const out: LabelledCell[][] = [];
+  let current: LabelledCell[] = [];
+  for (const s of segments) {
+    if (s.kind === 'space') {
+      if (current.length) out.push(current);
+      current = [];
+      continue;
+    }
+    for (const mask of s.cells) current.push({ mask, label: s.label, kind: s.kind });
+  }
+  if (current.length) out.push(current);
+  return out;
+}
+
+/**
+ * Word-aware paging (docs/DYDAKTYKA.md §3): pages break only between words,
+ * so a word or a number (number sign + digits) is never cut in two, and no
+ * page starts with a blank cell. A token longer than a whole page is split
+ * into `size - 1` cells plus a trailing blank ("ciąg dalszy") per page. A
+ * number cut this way repeats its number sign on the next page, otherwise
+ * the digits there would read as letters a–j; an all-caps word cut this
+ * way repeats its "⠨⠨" for the same reason. A page never ends on a sign
+ * that belongs to the next cell.
+ */
+export function paginateSegments(translation: Pick<Translation, 'segments'>, size: number = CELLS_PER_PAGE): BraillePage[] {
+  if (!Number.isInteger(size) || size < 1) throw new RangeError(`Invalid page size: ${size}`);
+  const pages: BraillePage[] = [];
+  let page: LabelledCell[] = [];
+
+  const flush = (continued = false) => {
+    if (!page.length) return;
+    pages.push({ cells: page.map((c) => c.mask), labels: page.map((c) => c.label), continued });
+    page = [];
+  };
+
+  for (const token of tokens(translation.segments)) {
+    if (token.length <= size) {
+      if (page.length && page.length + 1 + token.length <= size) {
+        page.push({ mask: 0, label: 'spacja', kind: 'space' }, ...token);
+      } else {
+        flush();
+        page = [...token];
+      }
+      continue;
+    }
+
+    // Longer than a page: it gets pages of its own.
+    flush();
+    let rest = [...token];
+    // An all-caps word opens with "⠨⠨"; its letters (up to the first
+    // non-letter) are the ones a cut would leave without the sign.
+    const capsLetters = new Set<LabelledCell>();
+    if (token.length > 2 && token[0]!.kind === 'sign' && token[1]!.kind === 'sign' &&
+        token[0]!.mask === CAPITAL_SIGN.mask && token[1]!.mask === CAPITAL_SIGN.mask) {
+      for (let i = 2; i < token.length && token[i]!.kind === 'letter'; i++) capsLetters.add(token[i]!);
+    }
+    // With a 1-cell page there is no room for the continuation blank.
+    const chunk = size > 1 ? size - 1 : size;
+    while (rest.length > size) {
+      let take = chunk;
+      // A sign (number, capital) modifies the next cell: keep them together.
+      while (take > 1 && rest[take - 1]!.kind === 'sign') take--;
+      page = rest.slice(0, take);
+      if (size > 1) page.push({ mask: 0, label: CONTINUATION_LABEL, kind: 'space' });
+      flush(size > 1);
+      const next = rest.slice(take);
+      const cutNumber = next[0]?.kind === 'digit' && rest[take - 1]!.kind === 'digit';
+      // A cut all-caps word repeats "⠨⠨" (2 cells, so the page needs room
+      // for at least one letter besides them and the continuation blank).
+      const cutCaps = next[0] !== undefined && capsLetters.has(next[0]);
+      if (cutNumber && size > 2) {
+        rest = [{ mask: NUMBER_SIGN.mask, label: NUMBER_SIGN.name, kind: 'sign' }, ...next];
+      } else if (cutCaps && size > 3) {
+        const sign: LabelledCell = { mask: CAPITAL_SIGN.mask, label: CAPITAL_SIGN.name, kind: 'sign' };
+        rest = [sign, { ...sign }, ...next];
+      } else {
+        rest = next;
+      }
+    }
+    page = rest;
+  }
+  flush();
+  return pages;
+}
+
 /** Cells -> Unicode braille string, e.g. [5, 21, 30] -> "⠅⠕⠞". */
 export function cellsToBraille(cells: readonly number[]): string {
   return cells.map(maskToChar).join('');

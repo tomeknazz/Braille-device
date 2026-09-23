@@ -39,7 +39,16 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
   (`MockDevice`).
 - Struktura: `src/braille/` (tabela `pl-braille.json` + translator + paginacja po 5
   komórek), `src/device/` (protokół, `DeviceLink`, `WebSerialDevice`, `MockDevice`),
-  `src/learn/` (kurs, postępy), `src/modes/` (tryby: Kurs, Wyświetl tekst), `src/ui/`.
+  `src/learn/` (kurs, postępy, słowa), `src/modes/` (tryby), `src/audio/` (mowa, sygnały),
+  `src/settings.ts`, `src/ui/`.
+- **Tryby:** Kurs (lista lekcji), Poznaj znak (znak na komórce 2, punkt po punkcie, reguły
+  dekad), Rozpoznawanie (quiz — **jedyny tryb zapisujący próby**; liczy się pierwsza
+  odpowiedź, podpowiedź z punktami = próba niepoprawna, stała `REVEALING_HINT`), Słowa
+  (`src/learn/words.json`, ≤ 5 komórek, tylko z odblokowanych liter), Wyświetl tekst.
+- **Informacja zwrotna:** tryby mówią przez `ctx.say()` (aria-live + synteza pl-PL, a przy
+  włączonej opcji „Używam czytnika ekranu” tylko aria-live) i `ctx.tone()`. Polecenie
+  „dotknij” pada dopiero po `OK` z urządzenia. Skróty: F1 powtórz, F2 podpowiedź,
+  F3 mrugnij, Esc wróć do wyboru ćwiczenia (`ctx.setKeys()`). Bez limitów czasu.
 - **Kurs:** `src/learn/curriculum.json` — lekcje L0 (punkty 1–6) i L1–L7 (po 5 liter,
   kolejność dekadowa). Reguły dekad (`rule`: L3 = L1 + punkt 3 itd.) są sprawdzane przy
   ładowaniu. Odblokowanie: ≥ 80% poprawnych w ostatnich 20 próbach (`unlock` w JSON;

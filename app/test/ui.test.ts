@@ -147,6 +147,26 @@ describe('app shell (simulator)', () => {
     await vi.advanceTimersByTimeAsync(1500);
   });
 
+  it('pages between words: "Żaba i kot 2026" keeps the number on one page', async () => {
+    const input = document.getElementById('text-input') as HTMLInputElement;
+    input.value = 'Żaba i kot 2026';
+    input.dispatchEvent(new Event('input'));
+    expect($('translation-summary').textContent).toBe('16 komórek, 3 strony.');
+    input.form!.requestSubmit();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect($('announcer').textContent).toMatch(/^Gotowe: strona 1 z 3: ż, a, b, a\./);
+
+    const next = [...document.querySelectorAll('button')].find((b) => b.textContent === 'Następna strona')!;
+    next.click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect($('announcer').textContent).toMatch(/^Gotowe: strona 2 z 3: i, odstęp, k, o, t\./);
+    next.click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect($('announcer').textContent).toMatch(/^Gotowe: strona 3 z 3: znak liczby, 2, 0, 2, 6\./);
+    expect(captionTexts()[0]).toMatch(/^⠼ Komórka 1: punkty 3, 4, 5, 6/);
+    expect(captionTexts()[4]).toMatch(/^⠋ Komórka 5/);
+  });
+
   it('announces translation warnings together with the result', async () => {
     const input = document.getElementById('text-input') as HTMLInputElement;
     input.value = 'ala.';

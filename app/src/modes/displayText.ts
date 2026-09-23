@@ -1,7 +1,16 @@
 // Mode "Wyświetl tekst": type text, translate to Polish braille, page it in
-// groups of 5 cells and show each page on the device.
+// groups of 5 cells and show each page on the device. Pages break between
+// words (paginateSegments), so a word or a number is never cut in two unless
+// it is longer than the whole display.
 
-import { cellsToBraille, paginate, translate, type Translation } from '../braille/translator';
+import {
+  CONTINUATION_LABEL,
+  cellsToBraille,
+  paginateSegments,
+  translate,
+  type BraillePage,
+  type Translation,
+} from '../braille/translator';
 import type { CommandResult } from '../device/DeviceLink';
 import type { Mode, ModeContext } from './types';
 
@@ -47,8 +56,7 @@ export const displayTextMode: Mode = {
 
   mount(root: HTMLElement, ctx: ModeContext): () => void {
     let translation: Translation = translate('');
-    let pages: number[][] = [];
-    let labels: string[] = [];
+    let pages: BraillePage[] = [];
     let page = 0;
 
     const input = h('input', { type: 'text', id: 'text-input', autocomplete: 'off', spellcheck: false });
@@ -67,7 +75,8 @@ export const displayTextMode: Mode = {
         h(
           'p',
           { className: 'hint', id: 'text-help' },
-          'Litery, polskie znaki, cyfry i podstawowa interpunkcja. Enter wyświetla pierwszą stronę (5 komórek).',
+          'Litery, polskie znaki, cyfry i podstawowa interpunkcja. Enter wyświetla pierwszą stronę (5 komórek). ' +
+            'Strony kończą się na granicy słów; pusta komórka na końcu strony oznacza, że słowo ciągnie się dalej.',
         ),
         input,
       ),
@@ -97,8 +106,7 @@ export const displayTextMode: Mode = {
 
     function retranslate(): void {
       translation = translate(input.value, { capitalSign: capital.checked });
-      pages = paginate(translation.cells);
-      labels = translation.segments.flatMap((s) => s.cells.map(() => s.label));
+      pages = paginateSegments(translation);
       page = Math.min(page, Math.max(0, pages.length - 1));
 
       const n = translation.cells.length;
@@ -133,7 +141,9 @@ export const displayTextMode: Mode = {
     }
 
     function pageDescription(i: number): string {
-      const words = labels.slice(i * 5, i * 5 + 5).map((l) => (l === 'spacja' ? 'odstęp' : l));
+      const words = (pages[i]?.labels ?? []).map((l) =>
+        l === 'spacja' ? 'odstęp' : l === CONTINUATION_LABEL ? 'pusta komórka: ciąg dalszy na następnej stronie' : l,
+      );
       const total = pages.length;
       return total > 1 ? `strona ${i + 1} z ${total}: ${words.join(', ')}` : words.join(', ');
     }
@@ -146,7 +156,7 @@ export const displayTextMode: Mode = {
     async function showPage(i: number, notes: string[] = []): Promise<void> {
       page = i;
       updatePager();
-      const cells = pages[i] ?? [];
+      const cells = pages[i]?.cells ?? [];
       const what = cells.length ? pageDescription(i) : 'pusty wyświetlacz';
       const result = await ctx.link.show(cells);
       const text = [describeResult(result, what), ...notes].filter(Boolean).join(' ');

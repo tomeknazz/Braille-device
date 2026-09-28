@@ -58,6 +58,16 @@ describe('Feedback routing', () => {
     expect(t.announced).toEqual(['x']);
   });
 
+  it('both speech channels get numbers as words', () => {
+    const t = setup();
+    t.fb.say('Różnią się punktem 4.');
+    expect(t.announced).toEqual(['Różnią się punktem cztery.']);
+    expect(t.spoken).toEqual(['Różnią się punktem cztery.']);
+    const r = setup({ screenReader: true });
+    r.fb.say('Na komórce 1 litera a.');
+    expect(r.announced).toEqual(['Na komórce jeden litera a.']);
+  });
+
   it('tones follow only the tones setting', () => {
     const t = setup({ screenReader: true });
     t.fb.tone('correct');

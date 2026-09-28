@@ -3,8 +3,11 @@
 //  - screen reader off -> aria-live (harmless without a reader) + speech
 //    synthesis if enabled.
 // Tones never collide with a screen reader, so they follow only `tones`.
+// Both speech channels get digits rewritten as words (speechText): the
+// aria-live region is visually hidden, so nothing on screen changes.
 
 import type { Speaker } from '../audio/speech';
+import { speechText } from '../audio/spokenNumbers';
 import type { TonePlayer, ToneKind } from '../audio/tones';
 import type { SettingsStore } from '../settings';
 
@@ -27,9 +30,10 @@ export class Feedback {
 
   say(message: string): void {
     if (!message) return;
-    this.announcer.announce(message);
+    const spoken = speechText(message);
+    this.announcer.announce(spoken);
     const s = this.settings.get();
-    if (!s.screenReader && s.speech) this.speaker.speak(message, s.rate);
+    if (!s.screenReader && s.speech) this.speaker.speak(spoken, s.rate);
   }
 
   tone(kind: ToneKind): void {

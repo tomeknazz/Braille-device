@@ -17,10 +17,11 @@ do uzupełnienia o kurs, tryby i Powtórki.
 
 **Zrobione:**
 - Firmware 0.4.0, protokół v1 (poprawiony parser, `show`/`cell`/`get`/…, OK/ERR po ruchu,
-  stan wyświetlacza, idle). **Kompiluje się, ale NIE był jeszcze uruchomiony na ESP32.**
+  stan wyświetlacza, idle). Firmware 0.4.1 działa na ESP32: aplikacja łączy się przez USB,
+  `show` odpowiada (np. `OK show moved=6 ms=221`), kalibracja poprawiona po pierwszych testach.
 - Aplikacja: Kurs L0–L7 z odblokowaniem, Poznaj znak, Rozpoznawanie, Powtórki (Leitner),
   Słowa, Wyświetl tekst, mowa/sygnały/tryb czytnika ekranu, lista komend w sekcji serwisowej.
-- Testy: 485 (Vitest), typecheck i build zielone.
+- Testy: 495 (Vitest), typecheck i build zielone.
 
 **Najpierw przy urządzeniu — test sprzętowy firmware** (lista z opisu PR #2):
 `EVT boot` → `hello` (oba PCA9685 `ok`) → `7,430`, `7,min`, `dump` (kalibracja jak dawniej)
@@ -54,6 +55,7 @@ komórce 2 (`QUIZ_CELL`/`ITEM_CELL` = 1); reguła dekad w Poznaj znak na dwa nac
   w `docs/PROTOCOL.md` i w liście komend (`app/src/ui/commandReference.ts`; test porównuje
   ją z `print_help()` w firmware).
 - Nie commituj ani nie pushuj bez prośby autora; commity po angielsku, rozmowa po polsku.
+- **Bez `Co-Authored-By: Claude`** (ani innych dopisków o AI) w commitach i opisach PR — decyzja autora.
 
 ## Dokumentacja projektowa (`docs/`)
 
@@ -72,6 +74,7 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
 - **Platforma:** PlatformIO, `board = denky32` (ESP32, mostek USB-UART), framework Arduino
 - **Biblioteka:** `adafruit/Adafruit PWM Servo Driver Library@^3.0.3`
 - **Build:** `pio run` · **Upload:** `pio run -t upload` · **Monitor:** `pio device monitor -b 115200`
+  - Na komputerze domowym `pio` jest w `~/.platformio/penv/Scripts/pio.exe` (Git Bash).
   - Na komputerze w pracy `pio` nie jest w PATH (zainstalowany `pip install --user platformio`):
     `$APPDATA/Python/Python314/Scripts/pio.exe` (Git Bash). Na innym komputerze sprawdź
     `pio --version` / `python -m platformio --version`; brak → `pip install --user platformio`.
@@ -102,7 +105,10 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
   tylko dla bieżącej lekcji. Licznik sesji rośnie po zakończeniu Powtórek (także przerwanych
   — zamykane przy następnym Starcie).
 - **Informacja zwrotna:** tryby mówią przez `ctx.say()` (aria-live + synteza pl-PL, a przy
-  włączonej opcji „Używam czytnika ekranu” tylko aria-live) i `ctx.tone()`. Polecenie
+  włączonej opcji „Używam czytnika ekranu” tylko aria-live) i `ctx.tone()`. Przed wypowiedzeniem
+  `speechText()` (`src/audio/spokenNumbers.ts`) zamienia cyfry na słowa: numery punktów/komórek/
+  pudełek w mianowniku („punktem cztery”, „na komórce jeden”), liczba przed kropką słownie
+  (inaczej syntezator czyta „4.” jako „czwartego”). Tekst na ekranie zostaje z cyframi. Polecenie
   „dotknij” pada dopiero po `OK` z urządzenia. Skróty: F1 powtórz, F2 podpowiedź,
   F3 mrugnij, Esc wróć do wyboru ćwiczenia (`ctx.setKeys()`). Bez limitów czasu.
 - **Kurs:** `src/learn/curriculum.json` — lekcje L0 (punkty 1–6) i L1–L7 (po 5 liter,
@@ -185,7 +191,8 @@ poprawne i obsługiwane; kod nigdzie nie zakłada, że min < max.
   przez `set_servo_from_global_index(i, 4096)` wartość zostałaby obcięta do 520.
 - Po bezczynności PWM traci tylko punkt **schowany**; wysunięty opadłby pod palcem.
 - Symulator ma kopię tablicy (dla `dump`) w `app/src/device/MockDevice.ts` — zmiana wiersza
-  w `servo_range` wymaga tej samej zmiany tam (inaczej testy mocka nie odpowiadają sprzętowi).
+  w `servo_range` wymaga tej samej zmiany tam; test w `app/test/mockDevice.test.ts` porównuje
+  obie tablice i nie przejdzie, dopóki się różnią.
 - Po 300 s bez komend wyświetlacz się czyści (`EVT sleep`). Na czas ręcznej kalibracji
   wyłącz auto-uśpienie: `idle,2,0`.
 - `DEFAULT_RETRACTED` / `DEFAULT_EXTENDED` to tylko wartości startowe wierszy

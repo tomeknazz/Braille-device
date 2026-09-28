@@ -73,7 +73,7 @@ describe('app shell (simulator)', () => {
       '⠈ Komórka 4: punkt 4 (bez znaczenia w tabeli)',
       '⠐ Komórka 5: punkt 5 (bez znaczenia w tabeli)',
     ]);
-    expect($('announcer').textContent).toMatch(/^Gotowe: punkt 1, punkt 2, punkt 3, punkt 4, punkt 5 na kolejnych komórkach/);
+    expect($('announcer').textContent).toMatch(/^Gotowe: punkt jeden, punkt dwa, punkt trzy, punkt cztery, punkt pięć na kolejnych komórkach/);
     expect(button().textContent).toBe('Pokaż na urządzeniu (2/2)');
     expect(document.activeElement).toBe(button());
 
@@ -162,7 +162,7 @@ describe('app shell (simulator)', () => {
     expect($('announcer').textContent).toMatch(/^Gotowe: strona 2 z 3: i, odstęp, k, o, t\./);
     next.click();
     await vi.advanceTimersByTimeAsync(1500);
-    expect($('announcer').textContent).toMatch(/^Gotowe: strona 3 z 3: znak liczby, 2, 0, 2, 6\./);
+    expect($('announcer').textContent).toMatch(/^Gotowe: strona 3 z 3: znak liczby, 2, 0, 2, sześć\./);
     expect(captionTexts()[0]).toMatch(/^⠼ Komórka 1: punkty 3, 4, 5, 6/);
     expect(captionTexts()[4]).toMatch(/^⠋ Komórka 5/);
   });

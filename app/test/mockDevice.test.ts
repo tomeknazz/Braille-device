@@ -1,8 +1,10 @@
 // The simulator must speak the same protocol subset as the firmware spec, or
 // DeviceLink tests prove nothing. These tests drive it directly.
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MockDevice } from '../src/device/MockDevice';
+import { MockDevice, SERVO_RANGE } from '../src/device/MockDevice';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -99,7 +101,7 @@ describe('MockDevice', () => {
     expect(await run(mock, '30,5')).toEqual(["ERR range servo '30'"]);
     expect(await run(mock, '7,5000')).toEqual(['ERR range pwm 90-520']);
     expect(await run(mock, '7,MIN')).toEqual(['Setting servo 7 to PWM 120', 'OK servo 7 min']);
-    expect(await run(mock, '6,max')).toEqual(['Setting servo 6 to PWM 105', 'OK servo 6 max']);
+    expect(await run(mock, '6,max')).toEqual(['Setting servo 6 to PWM 100', 'OK servo 6 max']);
     expect(await run(mock, '7,0430')).toEqual(['Setting servo 7 to PWM 430', 'OK servo 7 430']);
   });
 
@@ -125,7 +127,7 @@ describe('MockDevice', () => {
     const out = await run(mock, 'dump');
     expect(out[0]).toBe('index,cell,dot,retracted,extended');
     expect(out[1]).toBe('0,0,1,470,430');
-    expect(out[30]).toBe('29,4,6,510,470');
+    expect(out[30]).toBe('29,4,6,500,460');
     expect(out.at(-1)).toBe('OK dump 30');
     expect(out).toHaveLength(32);
   });
@@ -317,7 +319,7 @@ const FIRMWARE_REPLIES: Row[] = [
   ['7,90', ['Setting servo 7 to PWM 90', 'OK servo 7 90']],
   ['7, 0430 ', ['Setting servo 7 to PWM 430', 'OK servo 7 430']],
   ['0,MIN', ['Setting servo 0 to PWM 470', 'OK servo 0 min']],
-  ['29,max', ['Setting servo 29 to PWM 470', 'OK servo 29 max']],
+  ['29,max', ['Setting servo 29 to PWM 460', 'OK servo 29 max']],
 ];
 
 describe('MockDevice matches the firmware reply table', () => {
@@ -360,5 +362,21 @@ describe('MockDevice matches the firmware replies with PCA9685 #2 missing', () =
     expect(await run(mock, 'show,1')).toEqual(['ERR hw pwm1']);
     expect(await run(mock, '7,430')).toEqual(['ERR hw pwm1']);
     expect(await run(mock, '20,430')).toEqual(['Setting servo 20 to PWM 430', 'OK servo 20 430']);
+  });
+});
+
+describe('calibration table', () => {
+  it('matches servo_range in src/main.cpp', () => {
+    // vitest runs with the app/ directory as root.
+    const firmware = readFileSync(resolve(process.cwd(), '../src/main.cpp'), 'utf8');
+    const define = (name: string) => Number(new RegExp(`#define ${name} (\\d+)`).exec(firmware)![1]);
+    const value = (v: string) => (/^\d+$/.test(v) ? Number(v) : define(v));
+    const body = /servo_range\[TOTAL_SERVOS\] = \{([\s\S]*?)\r?\n\};/.exec(firmware)![1]!;
+    // Rows only: the comments repeat old values in the same {a, b} shape.
+    const rows = [...body.replace(/\/\/.*$/gm, '').matchAll(/\{\s*(\w+)\s*,\s*(\w+)\s*\}/g)].map(
+      (m) => [value(m[1]!), value(m[2]!)],
+    );
+    expect(rows).toHaveLength(30);
+    expect(SERVO_RANGE).toEqual(rows);
   });
 });

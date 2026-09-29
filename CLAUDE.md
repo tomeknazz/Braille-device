@@ -11,9 +11,8 @@ tryby nauki, dźwięk, postępy). Nowe znaki dodaje się w JSON-ie aplikacji, ni
 
 ## Stan prac i następne kroki (aktualizuj na koniec każdej sesji)
 
-Branch roboczy: **`etap1-protocol-v1`** → otwarty **PR #2** do `master`
-(https://github.com/tomeknazz/Braille-device/pull/2). Opis PR opisuje tylko Etap 1 —
-do uzupełnienia o kurs, tryby i Powtórki.
+Wszystko jest na **`master`** (PR #2 z `etap1-protocol-v1` scalony przed audytem dostępności
+i testem z użytkownikiem). Uruchomienie na nowym komputerze: `README.md`.
 
 **Zrobione:**
 - Firmware 0.4.0, protokół v1 (poprawiony parser, `show`/`cell`/`get`/…, OK/ERR po ruchu,
@@ -135,11 +134,11 @@ Zdarzenia `EVT key` są zarezerwowane w protokole na przyszłe przyciski.
 
 ## Struktura repo
 
-Śledzone: `.gitignore`, `CLAUDE.md`, `platformio.ini`, `src/main.cpp`, `docs/`, `app/`
+Śledzone: `.gitignore`, `README.md`, `CLAUDE.md`, `platformio.ini`, `src/main.cpp`, `docs/`, `app/`
 (bez `node_modules/`, `app/dist/`). Ignorowane: `/include`, `/lib`, `/test` (zakotwiczone
 do korzenia, żeby nie łapały katalogów w `app/`), `.vscode/`, `.cache/`, `.pio/`.
 
-Branche: `master` (dawny `tester` scalony w PR #1) i `etap1-protocol-v1` (PR #2, praca bieżąca).
+Branche: `master` (główny; scalone PR #1 z `tester` i PR #2 z `etap1-protocol-v1`).
 
 ## Protokół v1 (skrót — szczegóły w `docs/PROTOCOL.md`)
 

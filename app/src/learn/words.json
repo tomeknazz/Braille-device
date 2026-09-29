@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "description": "Słowa do trybu Słowa: pospolite polskie wyrazy (małymi literami), najwyżej 5 komórek po translacji, bez interpunkcji i cyfr. Bez imion i nazw własnych: w brajlu wymagają znaku wielkiej litery ⠨ (lekcja L8). Minimalną lekcję każdego słowa liczy src/learn/words.ts z curriculum.json. Lista ręczna (docs/DYDAKTYKA.md §3), bez słów drażliwych i dwuznacznych.",
+  "words": [
+    "baba", "baca", "dba", "dach", "gad", "jad", "hej", "ich", "figa", "idea", "chce", "biega",
+    "gaj", "dbaj", "bada", "cicha", "biegi", "dom", "koc", "noc", "okno", "oko", "dno", "mleko",
+    "noga", "nogi", "ogon", "olej", "banan", "balon", "bank", "blok", "kolej", "domek", "kino", "lina",
+    "linka", "mama", "hak", "mak", "nie", "mnie", "ocean", "moda", "model", "kod", "lalka", "mina",
+    "okna", "melon", "cena", "ile", "maja", "kot", "lato", "pies", "rok", "sok", "nos", "park",
+    "list", "tata", "mapa", "sen", "ser", "most", "port", "sto", "stop", "test", "tort", "tak",
+    "tam", "kasa", "plan", "pani", "pan", "piec", "rama", "rano", "sala", "sad", "salon", "sklep",
+    "teatr", "karta", "lista", "masa", "meta", "metro", "miska", "motor", "sarna", "sport", "stopa", "tost",
+    "pola", "droga", "trasa", "dym", "zupa", "ryby", "ryba", "zima", "suma", "ul", "usta", "buty",
+    "dziki", "zebra", "zamek", "zero", "zegar", "mysz", "kura", "kury", "mucha", "nuty", "kubek", "lody",
+    "luty", "syn", "szary", "ucho", "ulica", "czas", "gruby", "guma", "jutro", "klucz", "rzeka", "szyja",
+    "szafa", "motyl", "kawa", "woda", "wujek", "ręka", "mąka", "ćma", "łapa", "głowa", "słowo", "wino",
+    "wilk", "waga", "łyk", "łza", "łąka", "ławka", "mała", "biała", "dąb", "ząb", "gęsi", "piąty",
+    "pięć", "wędka", "być", "pić", "mieć", "ciało", "łuk", "małpa", "mały", "miło", "pałac", "pełny",
+    "piłka", "wiatr", "wyraz", "wyspa", "zając", "żaba", "źle", "koń", "gęś", "sól", "stół", "łódka",
+    "łóżko", "łyżka", "róża", "góra", "mróz", "wóz", "nóż", "dzień", "bańka", "śnieg", "świat", "późno",
+    "jeż", "żuk", "żółw", "żółty", "kość", "gość", "liść", "miś", "łoś", "buźka", "córka", "żona",
+    "mąż", "może", "już", "dużo", "słoń", "dłoń", "cień", "śruba", "środa"
+  ]
+}

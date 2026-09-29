@@ -1,0 +1,37 @@
+/* Mode "Poznaj znak". Colors come from the tokens in styles.css. */
+
+.learn select {
+  display: block;
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 2px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.learn-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.learn-item .learn-glyph {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* Same look as button:disabled, but the button keeps focus (aria-disabled). */
+.learn button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-style: dashed;
+}

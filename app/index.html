@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="BrailleLab — nauka alfabetu Braille'a na 5-komórkowym urządzeniu z serwami." />
+    <title>BrailleLab</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Przejdź do treści</a>
+    <header class="site-header">
+      <h1>BrailleLab</h1>
+      <p class="tagline">Nauka alfabetu Braille'a na urządzeniu z pięcioma komórkami</p>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section class="panel" aria-labelledby="conn-heading">
+        <h2 id="conn-heading">Połączenie</h2>
+        <p id="serial-unsupported" class="notice" hidden>
+          Ta przeglądarka nie obsługuje Web Serial, więc nie połączy się z urządzeniem przez USB.
+          Użyj Chrome lub Edge na komputerze (strona musi być otwarta z https lub localhost).
+          Tryb symulacji działa w każdej przeglądarce.
+        </p>
+        <div class="button-row">
+          <button type="button" id="btn-connect-usb" aria-describedby="serial-unsupported">
+            Połącz z urządzeniem (USB)
+          </button>
+          <button type="button" id="btn-connect-mock">Tryb symulacji</button>
+          <button type="button" id="btn-disconnect" hidden>Rozłącz</button>
+        </div>
+        <p class="status-line">
+          <span class="status-label">Stan:</span>
+          <span id="conn-status" role="status" aria-live="polite" aria-atomic="true">Nie połączono.</span>
+        </p>
+      </section>
+
+      <section class="panel" aria-labelledby="settings-heading">
+        <details id="settings-details">
+          <summary><h2 id="settings-heading" class="summary-heading">Dźwięk i dostępność</h2></summary>
+          <div id="settings-root"></div>
+          <p class="hint">
+            Skróty: F1 — powtórz, F2 — podpowiedź, F3 — mrugnij znakiem, Esc — wróć do wyboru ćwiczenia.
+          </p>
+        </details>
+      </section>
+
+      <section class="panel" aria-labelledby="mode-heading">
+        <h2 id="mode-heading">Ćwiczenie</h2>
+        <div id="mode-nav"></div>
+        <div id="mode-root"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="preview-heading">
+        <h2 id="preview-heading">Podgląd urządzenia</h2>
+        <p class="hint" id="preview-hint">
+          Pokazuje stan potwierdzony przez urządzenie. Punkt wysunięty: wypełnione kółko. Punkt schowany: przerywany okrąg.
+        </p>
+        <div id="preview" aria-describedby="preview-hint"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="log-heading">
+        <h2 id="log-heading" class="visually-hidden">Diagnostyka</h2>
+        <details id="log-details">
+          <summary>Dziennik protokołu (dla serwisu)</summary>
+          <div id="log-root"></div>
+        </details>
+      </section>
+    </main>
+
+    <div id="announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

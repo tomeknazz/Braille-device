@@ -1,0 +1,28 @@
+/* Mode "Słowa". Colours come from the shared tokens in styles.css; state is
+   always spelled out in text, never shown by colour alone. */
+
+.words-form .button-row + .button-row {
+  margin-top: 0.5rem;
+}
+
+.words-status {
+  min-height: 1.5em;
+  font-weight: 600;
+}
+
+.words-reveal .braille-text {
+  margin-left: 0.5em;
+}
+
+.words-score {
+  margin-top: 0.5rem;
+}
+
+.words-history {
+  margin: 0.5rem 0 0;
+  padding-left: 1.5rem;
+}
+
+.words-history li + li {
+  margin-top: 0.25rem;
+}

@@ -1,5 +1,5 @@
 // Mode "Poznaj znak" (docs/DYDAKTYKA.md §4.1, §4.2): presentation, no quiz.
-// One character of the chosen lesson stands on cell 2 with the other cells
+// One character of the chosen lesson stands on cell 3 with the other cells
 // blank; the app names it and its dots only after the device confirmed the
 // move. Variants: dot-by-dot build-up (each dot named as it rises), blink, the whole lesson
 // on all 5 cells, and the decade rule animated in place (a–e + dot 3 -> k–o:
@@ -17,8 +17,8 @@ import { describeResult } from './displayText';
 import type { Mode, ModeContext } from './types';
 
 const CELLS = 5;
-/** Cell 2 (index 1): easy to find, blank cells on both sides. */
-export const ITEM_CELL = 1;
+/** Cell 3 (index 2): the middle cell, blank cells on both sides. */
+export const ITEM_CELL = 2;
 /** Cascade step used for dot-by-dot and the rule animation (ms per dot). */
 export const SLOW_STEP_MS = 400;
 /** How long a blink keeps the dots down. */
@@ -295,7 +295,7 @@ export const learnMode: Mode = {
       h(
         'p',
         { className: 'hint' },
-        'Znak pojawia się na komórce 2, pozostałe komórki są puste. Nazwa i punkty padają dopiero, gdy punkty są już wysunięte. ' +
+        'Znak pojawia się na komórce 3, pozostałe komórki są puste. Nazwa i punkty padają dopiero, gdy punkty są już wysunięte. ' +
           'Skróty: F1 powtórz, F2 gdzie są punkty, F3 mrugnij.',
       ),
       h('div', { className: 'field' }, h('label', { htmlFor: 'learn-lesson' }, 'Lekcja'), select),

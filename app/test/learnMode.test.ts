@@ -214,7 +214,7 @@ describe('lesson picker', () => {
     ]);
     expect(h.select().value).toBe('L1');
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 1, 0, 0]);
     expect(h.lastSaid()).toBe('To jest a. Punkt 1.');
   });
 
@@ -226,14 +226,14 @@ describe('lesson picker', () => {
     choose(h, 'L3');
     await vi.advanceTimersByTimeAsync(1000);
     expect(h.sent().length).toBe(before);
-    expect(h.mock.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 1, 0, 0]);
     expect(h.lastSaid()).toBe(`Lekcja L3 wybrana. ${L3.note} Naciśnij Powtórz (F1), aby pokazać pierwszy znak.`);
     expect(h.root.querySelector('#learn-item-text')?.textContent).toMatch(/^Znak 1 z 5: k \(ka\)/);
     expect(h.root.querySelector('#learn-lesson-note')?.textContent).toBe(L3.note);
     expect(h.button('learn-rule').hidden).toBe(false);
     h.keys().repeat!();
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 5, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 5, 0, 0]);
     expect(h.events.slice(-2)).toEqual(['say:To jest ka. Punkty 1, 3. Ka to a z dodanym punktem 3.', 'tone:ready']);
   });
 
@@ -261,20 +261,20 @@ describe('lesson picker', () => {
     choose(h, 'L1');
     h.keys().repeat!();
     await vi.advanceTimersByTimeAsync(2000);
-    expect(h.mock.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 1, 0, 0]);
     expect(h.lastSaid()).toBe('To jest a. Punkt 1.');
     expect(h.said.some((m) => m.startsWith('Lekcja L1 wybrana'))).toBe(false);
   });
 });
 
 describe('presenting an item', () => {
-  it('shows the item on cell 2 and speaks only after the device confirmed it', async () => {
+  it('shows the item on cell 3 and speaks only after the device confirmed it', async () => {
     const h = await setup();
     await vi.advanceTimersByTimeAsync(5);
     expect(h.said).toEqual([]); // the dots are still moving
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 1, 0, 0, 0]);
-    expect(h.sent()).toEqual(['show,0,1']);
+    expect(h.mock.cells).toEqual([0, 0, 1, 0, 0]);
+    expect(h.sent()).toEqual(['show,0,0,1']);
     expect(h.events).toEqual(['say:Punkt 1. Lewa kolumna, na górze.', 'tone:ready']);
     expect(h.root.querySelector('#learn-item-text')?.textContent).toBe('Znak 1 z 6: punkt 1 — lewa kolumna, na górze.');
   });
@@ -291,7 +291,7 @@ describe('presenting an item', () => {
     next.focus();
     next.click();
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 2, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 2, 0, 0]);
     expect(h.lastSaid()).toBe('Punkt 2. Lewa kolumna, pośrodku.');
     expect(document.activeElement).toBe(next); // focus stays on the control used
     expect(prev.getAttribute('aria-disabled')).toBe('false');
@@ -311,7 +311,7 @@ describe('presenting an item', () => {
 
     prev.click();
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 16, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 16, 0, 0]);
   });
 
   it('F1 repeats: re-says when the item is still there, re-shows when it is not', async () => {
@@ -328,7 +328,7 @@ describe('presenting an item', () => {
     expect(h.mock.cells).toEqual([1, 2, 4, 8, 16]);
     h.button('learn-repeat').click();
     await vi.advanceTimersByTimeAsync(1000);
-    expect(h.mock.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 1, 0, 0]);
     expect(h.lastSaid()).toBe('Punkt 1. Lewa kolumna, na górze.');
   });
 
@@ -381,13 +381,13 @@ describe('dot by dot, blink, whole lesson', () => {
     };
     h.button('learn-dots').click();
     await vi.advanceTimersByTimeAsync(5000);
-    expect(h.sent().slice(from)).toEqual(['show', 'show,0,1', 'show,0,5', 'show,0,13']); // no anim needed
+    expect(h.sent().slice(from)).toEqual(['show', 'show,0,0,1', 'show,0,0,5', 'show,0,0,13']); // no anim needed
     expect(heard).toEqual([
-      ['Punkt po punkcie.', [0, 13, 0, 0, 0]], // before anything moves
-      ['Punkt 1.', [0, 1, 0, 0, 0]],
-      ['Punkt 3.', [0, 5, 0, 0, 0]],
-      ['Punkt 4.', [0, 13, 0, 0, 0]],
-      ['To jest em. Punkty 1, 3, 4. Em to ce z dodanym punktem 3.', [0, 13, 0, 0, 0]],
+      ['Punkt po punkcie.', [0, 0, 13, 0, 0]], // before anything moves
+      ['Punkt 1.', [0, 0, 1, 0, 0]],
+      ['Punkt 3.', [0, 0, 5, 0, 0]],
+      ['Punkt 4.', [0, 0, 13, 0, 0]],
+      ['To jest em. Punkty 1, 3, 4. Em to ce z dodanym punktem 3.', [0, 0, 13, 0, 0]],
     ]);
     expect(h.said.length).toBe(said + 5);
     expect(h.tones[h.tones.length - 1]).toBe('ready');
@@ -405,7 +405,7 @@ describe('dot by dot, blink, whole lesson', () => {
     expect(h.lastSaid()).toBe('Punkt 1.');
     h.button('learn-next').click(); // el
     await vi.advanceTimersByTimeAsync(3000);
-    expect(h.mock.cells).toEqual([0, 7, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 7, 0, 0]);
     expect(h.lastSaid()).toBe('To jest el. Punkty 1, 2, 3. El to be z dodanym punktem 3.');
     expect(h.said).not.toContain('Punkt 3.');
   });
@@ -433,7 +433,7 @@ describe('dot by dot, blink, whole lesson', () => {
     // Afterwards it works again.
     h.button('learn-next').click();
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 7, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 7, 0, 0]);
   });
 
   it('F3 right after Następny blinks the new item, not the one it replaces', async () => {
@@ -442,7 +442,7 @@ describe('dot by dot, blink, whole lesson', () => {
     h.button('learn-next').click();
     h.keys().blink!(); // before the device confirmed punkt 2
     await vi.advanceTimersByTimeAsync(2000);
-    expect(h.mock.cells).toEqual([0, 2, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 2, 0, 0]);
     expect(h.root.querySelector('#learn-item-text')?.textContent).toMatch(/^Znak 2 z 6: punkt 2/);
     expect(h.lastSaid()).toBe('Wysunięte ponownie: punkt 2.');
     expect(h.said).not.toContain('Wysunięte ponownie: punkt 1.');
@@ -458,8 +458,8 @@ describe('dot by dot, blink, whole lesson', () => {
     await vi.advanceTimersByTimeAsync(BLINK_MS - 100);
     expect(h.mock.cells).toEqual([0, 0, 0, 0, 0]);
     await vi.advanceTimersByTimeAsync(500);
-    expect(h.mock.cells).toEqual([0, 1, 0, 0, 0]);
-    expect(h.sent().slice(from)).toEqual(['show', 'show,0,1']);
+    expect(h.mock.cells).toEqual([0, 0, 1, 0, 0]);
+    expect(h.sent().slice(from)).toEqual(['show', 'show,0,0,1']);
     expect(h.events.slice(-2)).toEqual(['say:Wysunięte ponownie: punkt 1.', 'tone:ready']);
   });
 
@@ -569,7 +569,7 @@ describe('rule animation', () => {
     h.button('learn-repeat').click();
     await vi.advanceTimersByTimeAsync(1000);
     expect(h.button('learn-rule').textContent).toBe('Pokaż regułę');
-    expect(h.mock.cells).toEqual([0, 5, 0, 0, 0]);
+    expect(h.mock.cells).toEqual([0, 0, 5, 0, 0]);
   });
 
   it('has no rule button for lessons without a rule', async () => {

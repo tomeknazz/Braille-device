@@ -40,7 +40,7 @@ wyłączanie PWM schowanych punktów po 2 s nie powoduje problemów.
 **Decyzje autora (nie zmieniać bez pytania):** odstępy Leitnera w sesjach (nie dniach);
 Powtórki liczą się do zaliczenia tylko dla bieżącej lekcji; podpowiedź z punktami (krok ≥ 2)
 = próba niepoprawna (`REVEALING_HINT`); znak wielkiej litery = punkty 4-6; znak ćwiczenia na
-komórce 2 (`QUIZ_CELL`/`ITEM_CELL` = 1); reguła dekad w Poznaj znak na dwa naciśnięcia.
+komórce 3 (`QUIZ_CELL`/`ITEM_CELL` = 2); reguła dekad w Poznaj znak na dwa naciśnięcia.
 
 ## Jak pracować w tym repo
 
@@ -90,7 +90,7 @@ Firmware i `app/src/device/MockDevice.ts` muszą wypisywać **identyczne** linie
   komórek), `src/device/` (protokół, `DeviceLink`, `WebSerialDevice`, `MockDevice`),
   `src/learn/` (kurs, postępy, słowa), `src/modes/` (tryby), `src/audio/` (mowa, sygnały),
   `src/settings.ts`, `src/ui/`.
-- **Tryby:** Kurs (lista lekcji), Poznaj znak (znak na komórce 2, punkt po punkcie, reguły
+- **Tryby:** Kurs (lista lekcji), Poznaj znak (znak na komórce 3, punkt po punkcie, reguły
   dekad), Rozpoznawanie (quiz — zapisuje próby kursu; liczy się pierwsza odpowiedź,
   podpowiedź z punktami = próba niepoprawna, stała `REVEALING_HINT`), Słowa
   (`src/learn/words.json`, ≤ 5 komórek, tylko z odblokowanych liter), Wyświetl tekst,

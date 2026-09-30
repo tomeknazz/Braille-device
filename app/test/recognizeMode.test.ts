@@ -262,7 +262,7 @@ describe('recognize mode: setup', () => {
 });
 
 describe('recognize mode: a trial', () => {
-  it('clears, pauses 300 ms, shows on cell 2, and only then plays ready and asks', async () => {
+  it('clears, pauses 300 ms, shows on cell 3, and only then plays ready and asks', async () => {
     const hx = await mount();
     // Something on the display from before: the trial must clear it first.
     const before = hx.link.show([63, 63]);
@@ -282,9 +282,9 @@ describe('recognize mode: a trial', () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(hx.confirmed).toEqual([
       [0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0],
+      [0, 0, 1, 0, 0],
     ]);
-    expect(hx.mock!.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, 1, 0, 0]);
     expect(hx.tones).toEqual(['ready']);
     expect(hx.lastSaid()).toBe('Który punkt jest wysunięty?');
     expect(progress.attempts('L0')).toHaveLength(0);
@@ -294,7 +294,7 @@ describe('recognize mode: a trial', () => {
     progress.setTeacherUnlocked(true);
     const hx = await mount({ lesson: 'L1' });
     await startSession();
-    expect(hx.mock!.cells).toEqual([0, mask('a'), 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, mask('a'), 0, 0]);
     expect(hx.lastSaid()).toBe('Jaki to znak?');
   });
 
@@ -319,7 +319,7 @@ describe('recognize mode: a trial', () => {
     // Next item (never the same one twice): cleared, then shown.
     expect(hx.confirmed).toEqual([
       [0, 0, 0, 0, 0],
-      [0, 2, 0, 0, 0],
+      [0, 0, 2, 0, 0],
     ]);
     expect(hx.lastSaid()).toBe('Który punkt jest wysunięty?');
     expect(hx.tones).toEqual(['ready', 'correct', 'ready']);
@@ -378,7 +378,7 @@ describe('recognize mode: a trial', () => {
     hx.confirmed.length = 0;
     await vi.advanceTimersByTimeAsync(3000);
     expect(hx.confirmed).toEqual([]);
-    expect(hx.mock!.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, 1, 0, 0]);
     hx.keys().repeat!();
     await vi.advanceTimersByTimeAsync(10);
     expect(hx.lastSaid()).toBe('Nie, to nie punkt 4. Spróbuj jeszcze raz.');
@@ -398,7 +398,7 @@ describe('recognize mode: a trial', () => {
     // Enter in the answer field (or the "Odpowiedz" button) continues, like "Dalej".
     btn('recognize-submit').click();
     await vi.advanceTimersByTimeAsync(1500);
-    expect(hx.mock!.cells).toEqual([0, 2, 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, 2, 0, 0]);
     expect(btn('recognize-next').hidden).toBe(true);
     expect(progress.attempts('L0')).toHaveLength(1);
   });
@@ -416,7 +416,7 @@ describe('recognize mode: a trial', () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(hx.confirmed).toEqual([
       [0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0],
+      [0, 0, 1, 0, 0],
     ]);
     expect(hx.tones).toEqual(['ready', 'wrong', 'wrong', 'ready']);
     expect(hx.lastSaid()).toBe('Dotknij jeszcze raz.');
@@ -429,7 +429,7 @@ describe('recognize mode: a trial', () => {
     progress.setTeacherUnlocked(true);
     const hx = await mount({ lesson: 'L3', random: () => 0.45 }); // k l [m] n o
     await startSession();
-    expect(hx.mock!.cells).toEqual([0, mask('m'), 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, mask('m'), 0, 0]);
     type('N');
     expect(hx.lastSaid()).toBe('Nie, to nie litera en. Spróbuj jeszcze raz.');
     type('m');
@@ -447,9 +447,9 @@ describe('recognize mode: a trial', () => {
     btn('recognize-next').click();
     expect(document.activeElement).toBe(input());
     await vi.advanceTimersByTimeAsync(1500);
-    expect(hx.mock!.cells[1]).not.toBe(0);
+    expect(hx.mock!.cells[2]).not.toBe(0);
     expect(hx.mock!.cells[0]).toBe(0);
-    expect(hx.mock!.cells[2]).toBe(0);
+    expect(hx.mock!.cells[1]).toBe(0);
   });
 
   it('walks the hint ladder on F2 and builds the answer dot by dot at step 4', async () => {
@@ -462,7 +462,7 @@ describe('recognize mode: a trial', () => {
     expect(hx.lastSaid()).toBe('Mrugam znakiem.');
     await vi.advanceTimersByTimeAsync(1000);
     expect(hx.lastSaid()).toBe('Dotknij jeszcze raz.');
-    expect(hx.mock!.cells).toEqual([0, mask('m'), 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, mask('m'), 0, 0]);
     k.hint!();
     // Said once per trial, when the ladder starts to cost the trial.
     expect(hx.lastSaid()).toBe('Ten znak ma 3 punkty. Od tej podpowiedzi próba nie liczy się jako poprawna.');
@@ -486,9 +486,9 @@ describe('recognize mode: a trial', () => {
     await vi.advanceTimersByTimeAsync(10_000);
     expect(hx.confirmed).toEqual([
       [0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0],
-      [0, 1 | 4, 0, 0, 0],
-      [0, mask('m'), 0, 0, 0],
+      [0, 0, 1, 0, 0],
+      [0, 0, 1 | 4, 0, 0],
+      [0, 0, mask('m'), 0, 0],
     ]);
     const spoken = hx.said.slice(saidBefore).filter((s) => s.startsWith('punkt'));
     expect(spoken).toEqual(['punkt 1', 'punkt 3', 'punkt 4']);
@@ -496,7 +496,7 @@ describe('recognize mode: a trial', () => {
 
     // The character stays under the fingers until "Dalej".
     await vi.advanceTimersByTimeAsync(5000);
-    expect(hx.mock!.cells).toEqual([0, mask('m'), 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, mask('m'), 0, 0]);
     k.hint!();
     expect(hx.lastSaid()).toMatch(/^To jest litera em/);
     k.repeat!();
@@ -519,8 +519,8 @@ describe('recognize mode: a trial', () => {
     await vi.advanceTimersByTimeAsync(10_000);
     expect(hx.said.filter((s) => s === 'punkt 3')).toHaveLength(0);
     expect(hx.lastSaid()).toBe('Jaki to znak?');
-    expect(hx.mock!.cells[1]).not.toBe(0);
-    expect(hx.mock!.cells[1]).not.toBe(mask('m'));
+    expect(hx.mock!.cells[2]).not.toBe(0);
+    expect(hx.mock!.cells[2]).not.toBe(mask('m'));
   });
 
   it('a correct answer after a revealing hint is not counted and waits for "Dalej"', async () => {
@@ -561,7 +561,7 @@ describe('recognize mode: a trial', () => {
     type('4');
     expect(hx.lastSaid()).toBe('Nie, to nie punkt 4. Spróbuj jeszcze raz.');
     await vi.advanceTimersByTimeAsync(1000);
-    expect(hx.mock!.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, 1, 0, 0]);
     expect(hx.tones).toEqual(['ready', 'wrong', 'ready']);
     expect(hx.lastSaid()).toBe('Nie, to nie punkt 4. Spróbuj jeszcze raz.');
     hx.keys().repeat!();
@@ -608,7 +608,7 @@ describe('recognize mode: a trial', () => {
     hx.keys().repeat!();
     expect(hx.said.length).toBe(before); // nothing said before the dots are back
     await vi.advanceTimersByTimeAsync(1000);
-    expect(hx.mock!.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, 1, 0, 0]);
     expect(hx.tones).toEqual(['ready', 'ready']);
     expect(hx.lastSaid()).toBe('Który punkt jest wysunięty?');
   });
@@ -662,7 +662,7 @@ describe('recognize mode: passing a lesson', () => {
     // No automatic next trial after a milestone.
     await vi.advanceTimersByTimeAsync(3000);
     expect(btn('recognize-next').hidden).toBe(false);
-    expect(hx.mock!.cells).toEqual([0, 1, 0, 0, 0]);
+    expect(hx.mock!.cells).toEqual([0, 0, 1, 0, 0]);
   });
 
   it('the unlock tone survives an immediate Enter', async () => {
@@ -698,7 +698,7 @@ describe('recognize mode: passing a lesson', () => {
     const hx = await mount();
     await startSession();
     for (let i = 0; i < 20; i++) {
-      const dot = maskToDots(hx.mock!.cells[1]!)[0]!;
+      const dot = maskToDots(hx.mock!.cells[2]!)[0]!;
       type(String(dot));
       await vi.advanceTimersByTimeAsync(2500);
     }
@@ -734,7 +734,7 @@ describe('recognize mode: stopping and failures', () => {
       .spyOn(hx.link, 'show')
       .mockResolvedValueOnce({ status: 'error', code: 'range', detail: 'servo' });
     await vi.advanceTimersByTimeAsync(1000);
-    expect(spy).toHaveBeenCalledWith([0, 1, 0, 0, 0]);
+    expect(spy).toHaveBeenCalledWith([0, 0, 1, 0, 0]);
     spy.mockRestore();
     expect(hx.lastSaid()).toMatch(/^Nie udało się ułożyć znaku\. Urządzenie zgłosiło błąd: range servo\. Sesja zatrzymana\./);
     expect(btn('recognize-start').disabled).toBe(false);

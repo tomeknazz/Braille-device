@@ -135,7 +135,7 @@ Następna lekcja odblokowuje się przy co najmniej 80% poprawnych w ostatnich 20
 
 | Priorytet | Tryb | Opis |
 |---|---|---|
-| MVP | **Poznaj znak** | Znak na komórce 2, reszta pusta. TTS: „To jest em. Punkty 1, 3, 4”. Wariant „punkt po punkcie” (`anim,400`). Animacja reguły: `a b c d e`, potem na wszystkich komórkach wysuwa się punkt 3 i powstaje `k l m n o`. |
+| MVP | **Poznaj znak** | Znak na komórce 3, reszta pusta. TTS: „To jest em. Punkty 1, 3, 4”. Wariant „punkt po punkcie” (`anim,400`). Animacja reguły: `a b c d e`, potem na wszystkich komórkach wysuwa się punkt 3 i powstaje `k l m n o`. |
 | MVP | **Rozpoznawanie** | Wzór próby: `clear` → 300 ms → `show` (uczeń czuje, że pojawił się nowy znak). Odpowiedź literą. Przy błędzie drabina podpowiedzi: mrugnięcie znakiem, liczba punktów, numery punktów, odpowiedź. Potem kontrast `[pokazany] [_] [wybrany]`. |
 | MVP | **Słowa ≤5 komórek** | Liczone w komórkach po translacji (znaki liczby i wielkiej litery też zajmują komórkę), tylko z liter już poznanych. Na start ręczna lista 100–200 słów. |
 | MVP | **Postępy** | Skuteczność i mediana czasu dla każdej litery, macierz pomyłek, podsumowanie czytane głosem, eksport CSV. |

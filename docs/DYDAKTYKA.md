@@ -170,7 +170,7 @@ Oznaczenia: `[_]` to pusta komórka, T to prompt TTS.
 - Pary pochodzą z §1.4 i z macierzy pomyłek ucznia (§5).
 
 ### 4.4 Rozpoznawanie (podstawowy quiz)
-- Jeden znak na komórce 2 (albo na losowej komórce, co dodatkowo ćwiczy szukanie).
+- Jeden znak na komórce 3 (albo na losowej komórce, co dodatkowo ćwiczy szukanie).
 - T: „Jaka to litera?" Uczeń odpowiada (§4.9, §5).
 - Czas rozpoznania = moment odpowiedzi − moment potwierdzenia `ok` z firmware (nie moment wysłania komendy).
 

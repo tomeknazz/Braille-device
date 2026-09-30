@@ -1,11 +1,11 @@
 // Modes "Rozpoznawanie" and "Powtórki" (docs/DYDAKTYKA.md §4.4, §4.9, §5.3,
-// §6.1): the quiz. One character on cell 2, the learner types what it is.
+// §6.1): the quiz. One character on cell 3, the learner types what it is.
 // Both variants share the trial below and differ only in where items come
 // from: one chosen lesson, or a Leitner review plan across all unlocked
 // lessons. Both move Leitner cards; course attempts (which pass lessons) are
 // recorded by Rozpoznawanie always, by Powtórki only for the current lesson.
 //
-// Trial: clear -> 300 ms -> show on cell 2 -> (after the device confirms)
+// Trial: clear -> 300 ms -> show on cell 3 -> (after the device confirms)
 // ready tone + prompt, start the clock. Only the first answer of a trial is
 // recorded. The first wrong answer leaves the character in place ("Spróbuj
 // jeszcze raz"); later ones (and F2) walk the hint ladder: blink, number of
@@ -33,8 +33,8 @@ import { describeResult } from './displayText';
 import type { KeyHandlers, Mode, ModeContext } from './types';
 import './recognize.css';
 
-/** Cell the quiz uses (0-based): cell 2 is surrounded by blanks, easy to find. */
-const QUIZ_CELL = 1;
+/** Cell the quiz uses (0-based): cell 3, the middle one, surrounded by blanks. */
+const QUIZ_CELL = 2;
 /** Highest hint step: 1 blink, 2 dot count, 3 dot numbers, 4 the answer. */
 const LAST_HINT = 4;
 /** From this hint step on a correct first answer is not counted as correct. */
@@ -241,7 +241,7 @@ export function createRecognizeMode(options: RecognizeOptions = {}): Mode {
             'do tego znaki bieżącej lekcji i kilka nowych. Dobra, szybka odpowiedź bez podpowiedzi przesuwa zaległy znak do wyższego pudełka, ' +
             'a po pomyłce znak wraca do pudełka 1. Do zaliczenia lekcji liczą się tu tylko znaki bieżącej lekcji. '
           : '') +
-          'Znak pojawia się na komórce 2. Po sygnale dotknij go i wpisz, co to za znak, potem Enter. ' +
+          'Znak pojawia się na komórce 3. Po sygnale dotknij go i wpisz, co to za znak, potem Enter. ' +
           'Po pierwszej pomyłce spróbuj jeszcze raz, po drugiej dostaniesz podpowiedź. ' +
           'Liczy się pierwsza odpowiedź; po podpowiedzi z punktami próba nie liczy się jako poprawna (mrugnięcie nie szkodzi). ' +
           'F1 powtarza polecenie, F2 daje podpowiedź, F3 mruga znakiem. Nie ma limitu czasu.',

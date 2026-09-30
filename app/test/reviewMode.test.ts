@@ -49,9 +49,9 @@ async function mount(reviewSize: number, variant: 'review' | 'lesson' = 'review'
   return { said, tones, confirmed, unmount };
 }
 
-/** The correct answer for what is on cell 2 now, judged by the last prompt. */
+/** The correct answer for what is on cell 3 now, judged by the last prompt. */
 function rightAnswer(h: Harness): string {
-  const mask = h.confirmed[h.confirmed.length - 1]![1]!;
+  const mask = h.confirmed[h.confirmed.length - 1]![2]!;
   const dotsPrompt = h.said.some((s) => s.startsWith('Który punkt'));
   const lastPrompt = [...h.said].reverse().find((s) => s === 'Jaki to znak?' || s === 'Który punkt jest wysunięty?');
   if (lastPrompt === 'Który punkt jest wysunięty?' || (!lastPrompt && dotsPrompt)) return String(maskToDots(mask)[0]);

@@ -101,7 +101,7 @@ describe('MockDevice', () => {
     expect(await run(mock, '30,5')).toEqual(["ERR range servo '30'"]);
     expect(await run(mock, '7,5000')).toEqual(['ERR range pwm 90-520']);
     expect(await run(mock, '7,MIN')).toEqual(['Setting servo 7 to PWM 120', 'OK servo 7 min']);
-    expect(await run(mock, '6,max')).toEqual(['Setting servo 6 to PWM 100', 'OK servo 6 max']);
+    expect(await run(mock, '6,max')).toEqual(['Setting servo 6 to PWM 105', 'OK servo 6 max']);
     expect(await run(mock, '7,0430')).toEqual(['Setting servo 7 to PWM 430', 'OK servo 7 430']);
   });
 

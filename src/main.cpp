@@ -63,10 +63,10 @@ const ServoRange servo_range[TOTAL_SERVOS] = {
   {140, 180},  //  2 - dot 3  140, 180
   {DEFAULT_RETRACTED, 160},  //  3 - dot 4 DEFAULT_RETRACTED, 160
   {175, 210},  //  4 - dot 5 160, 210
-  {490, 465},  //  5 - dot 6 500, 460
+  {490, 440},  //  5 - dot 6 490, 450
 
   // --- Cell 1 (servos 6-11) ---
-  {140, 100},  //  6 - dot 1
+  {140, 105},  //  6 - dot 1 140, 100
   {DEFAULT_RETRACTED, 150},  //  7 - dot 2 DEFAULT_RETRACTED, 150
   {115, 130},  //  8 - dot 3 115, 130
   {120, 160},  //  9 - dot 4
@@ -82,7 +82,7 @@ const ServoRange servo_range[TOTAL_SERVOS] = {
   {480, 450},  // 17 - dot 6 490, 450
 
   // --- Cell 3 (servos 18-23) ---
-  {500, 450},  // 18 - dot 1
+  {490, 450},  // 18 - dot 1 500, 450
   {DEFAULT_RETRACTED, 170},  // 19 - dot 2 DEFAULT_RETRACTED, 160
   {110, 135},  // 20 - dot 3 110, 135
   {145, 175},  // 21 - dot 4
